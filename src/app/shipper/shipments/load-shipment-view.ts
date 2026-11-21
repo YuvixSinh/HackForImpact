@@ -22,6 +22,8 @@ export type ShipmentPageView = {
   trackingEvents: TrackingEvent[];
   /** Earlier cancelled bookings for this shipment, newest first. */
   cancelledBookings: Booking[];
+  /** The account's automatic booking limit, for the agent workflow tile. */
+  maxAutoPricePence: number;
 };
 
 /** Bookings the card shows: holding capacity, or completed. */
@@ -36,11 +38,12 @@ export async function loadShipmentView(
   const shipment = await repos.shipments.getById(ctx, shipmentId);
   if (!shipment) return null;
 
-  const [stored, approvals, bookings, factors] = await Promise.all([
+  const [stored, approvals, bookings, factors, policy] = await Promise.all([
     repos.matches.listForShipment(ctx, shipment.id),
     repos.approvals.listForShipment(ctx, shipment.id),
     repos.bookings.listForAccount(ctx),
     repos.emissions.listFactors(),
+    repos.policies.get(ctx),
   ]);
   const ranked = [...stored].sort((a, b) => a.rank - b.rank).slice(0, 3);
   const listings = new Map<Id, CapacityListing | null>();
@@ -54,6 +57,7 @@ export async function loadShipmentView(
     return {
       id: o.id,
       rank: o.rank,
+      listingId: o.capacityListingId,
       mode: listing?.mode ?? null,
       departureAt: listing?.departureAt ?? null,
       arrivalAt: o.arrivalAt,
@@ -113,5 +117,6 @@ export async function loadShipmentView(
     activeBooking: active,
     trackingEvents,
     cancelledBookings: forShipment.filter((b) => b.status === "cancelled").reverse(),
+    maxAutoPricePence: policy.maxAutoPricePence,
   };
 }

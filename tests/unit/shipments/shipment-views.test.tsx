@@ -12,6 +12,7 @@ afterEach(cleanup);
 const option = (overrides: Partial<OptionView> = {}): OptionView => ({
   id: "opt-1",
   rank: 1,
+  listingId: "listing-1",
   mode: "road",
   departureAt: "2030-01-02T15:00:00.000Z",
   arrivalAt: "2030-01-03T01:00:00.000Z",

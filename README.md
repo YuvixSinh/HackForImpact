@@ -128,6 +128,13 @@ On stage:
 | Transport / Optimise for / Urgency | leave the defaults (Any, Balanced, Standard) |
 
 3. Press **Ship it**. Autopilot ranks all three options and books the **£100** one automatically. £100 is exactly the default automatic limit, so no approval is needed. The booking card shows the reference, receipt and CO₂.
+4. On the shipment page, the **Autopilot at work** tile replays the run:
+   - the three options appear first;
+   - then the agent searches, ranks, checks your approval rules, and books and pays, one step at a time;
+   - the £100 option is highlighted as the agent's pick and the others fade.
+
+   Press **Replay** to run it again. The code is in `src/lib/autopilot/workflow.ts` (pure) and `src/components/shipments/agent-workflow.tsx`.
+5. The **Tracking** tile has an interactive map: OpenStreetMap tiles, drag to pan, + / − / ⌖ to zoom and recentre, with the route and the van's simulated position. It needs internet access for the tiles. It knows a fixed list of demo cities (`src/lib/tracking/places.ts`); any other place name falls back to the simple route line.
 
 Notes: start the app on the day of the demo, because the departures are relative to the start time. Use **Ship it**, not "Compare options myself", which currently saves the shipment without listing options. With SolvaPay switched on (`SOLVAPAY_SECRET_KEY` set), the £100 booking needs at least 1,000,000 sandbox credits on the configured customer, or the payment is declined. With the key empty, the testing adapter approves it.
 

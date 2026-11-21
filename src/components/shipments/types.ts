@@ -6,6 +6,8 @@ import type { Id, IsoDateTime, Pence, TransportMode } from "@/lib/domain/common"
 export type OptionView = {
   id: Id;
   rank: number;
+  /** The provider listing this option would book. */
+  listingId: Id;
   /** Null when the listing is no longer visible (e.g. its capacity ran out). */
   mode: TransportMode | null;
   departureAt: IsoDateTime | null;
