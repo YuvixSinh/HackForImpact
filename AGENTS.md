@@ -31,3 +31,13 @@ This file is the agent entry point and applies to the whole repository. Read it 
 - Put durable product requirements in `docs/spec.md`, system structure in `docs/architecture.md`, and significant tradeoffs in `docs/decisions/`.
 - Keep credentials, local machine state, and generated output out of source control.
 - When creating a new project from this framework, replace bracketed template text and remove irrelevant stack-specific folders and examples.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+## This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

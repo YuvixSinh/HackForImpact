@@ -29,20 +29,32 @@ Use [`docs/claude-build-prompts.md`](docs/claude-build-prompts.md) to give Claud
 | `docs/claude-build-prompts.md` | Staged Claude Code implementation and review prompts |
 | `docs/decisions/` | Durable records of significant technical/product decisions |
 | `docs/templates/` | Copyable starting documents for new projects |
-| `src/` | Application or library source code |
+| `src/app/` | Next.js routes and root layout (`/`, `/shipper`, `/provider`) |
+| `src/components/` | Shared UI components (header, theme toggle, placeholders) |
+| `src/lib/` | Framework-independent logic (currently theme persistence) |
 | `tests/unit/` | Focused tests for individual units |
 | `tests/integration/` | Tests across module/service boundaries |
 
 ## Project setup
 
-Replace these prompts when adapting the framework:
+AutoShip is a Next.js 16.4.6 app (App Router, TypeScript, Tailwind CSS v4) using npm. Unit tests use Vitest with jsdom and Testing Library.
 
-- **Runtime / package manager:** [fill in]
-- **Install:** [command]
-- **Run locally:** [command]
-- **Test:** [command]
-- **Lint / format:** [command]
-- **Build:** [command]
+- **Runtime / package manager:** Node.js and npm. The app supports Node `>=20.9.0` (`engines`). The dev tooling (Vitest 5, jsdom 31) needs Node `^22.12.0`, `^24`, or `>=26`. Verified on Node 26.13.1 and npm 11.20.0.
+- **Environment:** No variables are needed for the app shell. Copy `.env.example` to `.env.local` when later tasks add them; never commit `.env*` files other than the example.
+
+All commands below were run successfully from the repository root:
+
+| Purpose | Command | Notes |
+| --- | --- | --- |
+| Install | `npm install` | Use `npm ci` for a clean install from `package-lock.json`. |
+| Run locally (development) | `npm run dev` | Serves http://localhost:3000. |
+| Test | `npm test` | Runs Vitest once (`tests/**/*.test.ts(x)`); `npm run test:watch` for watch mode. |
+| Lint | `npm run lint` | ESLint with `eslint-config-next` (core web vitals + TypeScript). |
+| Type check | `npm run typecheck` | `tsc --noEmit`. |
+| Build | `npm run build` | Production build into `.next/`. |
+| Run production build | `npm start` | Run after `npm run build`; serves http://localhost:3000. |
+
+Before marking work complete, run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`.
 
 ## Starting a project from this framework
 

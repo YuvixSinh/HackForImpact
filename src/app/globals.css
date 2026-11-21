@@ -1,0 +1,43 @@
+@import "tailwindcss";
+
+/* Class-based dark mode: the init script and theme toggle set .dark on <html>. */
+@custom-variant dark (&:where(.dark, .dark *));
+
+:root {
+  --background: #f6f8f5;
+  --surface: #ffffff;
+  --surface-muted: #eef3ec;
+  --ink: #17231b;
+  --ink-muted: #4f6155;
+  --line: #d6e0d4;
+  --brand: #2f7d4f;
+  --brand-ink: #ffffff;
+}
+
+.dark {
+  --background: #0f1512;
+  --surface: #161f1a;
+  --surface-muted: #1f2a23;
+  --ink: #e6efe8;
+  --ink-muted: #9cb0a2;
+  --line: #2c3a31;
+  --brand: #5fbf86;
+  --brand-ink: #0f1512;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-ink: var(--ink);
+  --color-ink-muted: var(--ink-muted);
+  --color-line: var(--line);
+  --color-brand: var(--brand);
+  --color-brand-ink: var(--brand-ink);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+  background: var(--background);
+  color: var(--ink);
+}

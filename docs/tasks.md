@@ -4,13 +4,14 @@ Complete tasks in this order. Claude Code must read the linked specification and
 
 ## Milestone 1: Foundation
 
-- [ ] **Set up the application shell.** Create the Next.js TypeScript and Tailwind application, add responsive light/dark themes, and record install, test, lint, build, and run commands in `README.md`.
-  - Acceptance: The app starts locally, switches theme, and passes its baseline checks.
-  - Verification: Run the documented lint, test, and build commands.
+- [x] **Set up the application shell.** Manually scaffold Next.js 16.4.6, TypeScript, Tailwind CSS v4, ESLint, and Vitest using npm. Add Node `>=20.9.0` engines, `.gitignore`, `.env.example`, responsive light/dark themes, and placeholder `/shipper` and `/provider` routes. Record install, test, lint, typecheck, build, development, and production-start commands in `README.md`.
+  - Acceptance: The app starts locally; themes persist without a visible flash on reload; the placeholders render; and secrets/build outputs are ignored.
+  - Verification: `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`.
+  - Done 2026-11-21: all four checks pass (15 Vitest tests). `npm run dev` and `npm start` both served `/`, `/shipper`, and `/provider`. In the browser, the stored theme overrode the system preference after a full reload; the theme script runs in `<head>` before the body; no horizontal scroll at 375px; no console errors. Note: TypeScript pinned to `~6.0.3` and ESLint to `^9` because `typescript-eslint` and `eslint-plugin-react` (used by `eslint-config-next`) do not yet support TypeScript 7 or ESLint 10.
 
-- [ ] **Establish data boundaries.** Add typed domain models, Supabase schema/migrations and row-level-security policies. Use in-memory repositories only if Supabase setup would block the demo, with the same repository interface. Create only the minimum test fixtures needed for early tests; leave the scripted mock-demo dataset until Milestone 5.
-  - Acceptance: Models and repositories support all primary flows without relying on hand-edited data.
-  - Verification: Schema check and automated repository tests.
+- [ ] **Establish data boundaries.** Add typed domain models, repository interfaces, and an in-memory implementation for local development. Add Supabase migrations, row-level-security policies, and a capacity-reservation RPC for a linked hosted development project. Create only minimum test fixtures; leave the scripted mock-demo dataset until Milestone 5.
+  - Acceptance: Models and repositories support all primary flows; the in-memory reservation matches the RPC contract; migrations apply to hosted Supabase; and one account cannot read another's shipment or booking data.
+  - Verification: `npx supabase db push --linked`, `npm run db:verify`, and `npm run test:integration`.
 
 - [ ] **Create account entry and role-specific shells.** Add a clear sign-in/sign-up path for business shippers, individual shippers, and providers. Route each role to its own dashboard shell.
   - Acceptance: A demo user can enter either dashboard and cannot view another account's records.
@@ -40,8 +41,8 @@ Complete tasks in this order. Claude Code must read the linked specification and
   - Acceptance: The interface reflects the matching and policy result without duplicating core business logic in the client.
   - Verification: End-to-end or integration tests for automatic, approval, and no-match cases.
 
-- [ ] **Add bookings, SolvaPay adapter, and feed cards.** Implement a server-only SolvaPay adapter with sandbox and testing modes, atomic capacity reservation, receipt generation/reference, and shipment feed updates.
-  - Acceptance: An eligible shipment books once, changes capacity once, and displays payment/receipt details. Failures leave capacity unchanged.
+- [ ] **Add bookings, SolvaPay adapter, and feed cards.** Implement a server-only `@solvapay/server` adapter for sandbox payment authorisation/checkout, plus a testing adapter for authorisation, delivery settlement, provider payout, and failure states. Add atomic capacity reservation, receipt generation/reference, and shipment feed updates.
+  - Acceptance: An eligible shipment books once, changes capacity once, and displays payment/receipt details. Failures leave capacity unchanged. The interface does not claim that SolvaPay holds escrowed funds.
   - Verification: Booking transaction and payment-failure integration tests.
 
 ## Milestone 4: Provider and tracking journey
