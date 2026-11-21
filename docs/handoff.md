@@ -12,11 +12,11 @@ AutoShip runs end to end locally on in-memory repositories with a demo sign-in. 
 | --- | --- | --- |
 | Lint | `npm run lint` | 0 errors, 0 warnings |
 | Types | `npm run typecheck` | 0 errors |
-| Unit + local integration | `npm test` | 36 files, 212 tests pass |
+| Unit + local integration | `npm test` | 36 files, 213 tests pass |
 | Build | `npm run build` | passes; 13 dynamic routes |
 | Hosted schema | `npm run db:verify` | 6 tests pass |
 | Hosted integration | `npm run test:integration` | 17 tests pass |
-| Hosted migrations | `npx supabase migration list --linked` | 5 of 6 applied; `20261121140000_cancel_booking_rpc.sql` is **local only, not pushed** |
+| Hosted migrations | `npx supabase migration list --linked` | 6 of 6 applied; `20261121140000_cancel_booking_rpc.sql` pushed 2026-11-21 with the owner's OK. `db:verify` now also checks `cancel_booking` (security definer, service role only) |
 | Demo reset in the running app | `POST /api/demo/reset` | 5/5 scenarios as expected (3 booked, 1 awaiting approval, 1 no match) |
 
 Browser pass after integration (dev server, desktop width, light theme):
@@ -29,14 +29,23 @@ Browser pass after integration (dev server, desktop width, light theme):
   - the Settings thresholds form.
 - The Rotterdam shipment page shows the recommendation and reasoning, the approval reason "Price is above your automatic booking limit" with Approve and Decline, and the ranked option's decisive fields.
 
-**Not checked in the browser yet:**
-- clicking Approve or Decline;
-- a new Ship it submission;
-- provider status changes and disruption;
-- the no-match page;
-- 375px width and dark theme for the new pages.
+Second browser pass (2026-11-21, dev server on :3001, after all checks above were re-run):
 
-These flows are all covered by the tests in section 2.
+| Flow | Width / theme | Result |
+| --- | --- | --- |
+| Decline on the Edinburgh no-match shipment | desktop, dark | approval card removed, "Book this option" offered |
+| Approve on the Rotterdam shipment | desktop, dark | Booked, reference, receipt `rcpt_test_*`, payment Authorised, tracking |
+| New Ship it (London → Manchester, 20 kg, £100 budget) | desktop, dark | auto-booked on road, £26.00 |
+| Shipment page and no-match page | 375px, dark and light | no horizontal overflow (`scrollWidth` 375) |
+| Shipper dashboard | 375px, light | carbon meter updates (5 bookings after the new ones) |
+| Provider: mark Collected | 375px, light | "Status saved", status shows collected |
+| Provider: Cancel booking (disruption) | 375px, light | booking cancelled; Autopilot rebooked the shipment on the other London → Manchester listing (new reference, £40.00); capacity updated |
+| Provider dashboard | desktop, dark | renders correctly |
+| Theme persistence | both | choice saved in `localStorage` (`autoship-theme`) and kept across pages and reloads |
+
+Fixed in this pass: the no-match explanation read "arrives with -4 h to spare". It now reads "arrives 4 h late" (`src/lib/matching/explain.ts`, test in `tests/unit/matching/match-shipment.test.ts`). Lint, typecheck, `npm test` (213) and build were re-run after the fix and pass.
+
+Not checked in the browser: the rebooked shipment as it appears in the shipper feed (covered by tests), the delayed-ETA form, and the signup pages at 375px.
 
 ## 3. How to run
 
@@ -79,7 +88,7 @@ These flows are all covered by the tests in section 2.
 1. **App data is in memory.** It resets on restart and is not shared between serverless instances, so a Vercel deploy would lose data between requests. Supabase-backed repositories for everything except the reservation RPC gateway do not exist yet.
 2. **Demo sign-in, not Supabase Auth** (ADR 0004, still *proposed*). No email verification, password reset, or rate limiting.
 3. **SolvaPay:** testing adapter only; the sandbox adapter is a stub. No escrow; settlement and payout are simulated.
-4. **`cancel_booking` migration not pushed** to the hosted project. In-memory cancel works and is tested.
+4. **`cancel_booking` RPC is on the hosted project but unused by the app.** The app cancels through the in-memory repository, which is tested. No hosted test calls the RPC yet.
 5. **Times are UTC.** Forms label `datetime-local` inputs "(UTC)". The tracking status form's delayed-ETA input is read in the server's local zone (minor inconsistency).
 6. **Delivered bookings** keep booking status `confirmed` (shipment becomes `delivered`); a delay's new ETA is stored on the tracking event, not the booking.
 7. **Budget** is collected but is not a hard filter (the spec does not list it); price limits come from approval policy.
@@ -89,12 +98,9 @@ These flows are all covered by the tests in section 2.
 
 ## 7. Next actions, in order
 
-1. Finish `docs/tasks.md` "Validate, secure, and document". It is the only unchecked task; every other task through Milestone 5 is ticked with notes.
-   - Do the browser pass for the unchecked items in section 2, at desktop and 375px, in both themes.
-   - Record the results, then tick the task.
-   - The last change was the shipper carbon panel title, which shows "Sustainability" when the meter is present. Lint, typecheck and `npm test` (212) were re-run after it and pass; build was not re-run after that one-line change.
+1. Done 2026-11-21: "Validate, secure, and document" is ticked; every task in `docs/tasks.md` is now checked. Results are in section 2.
 2. Decide with Codex: accept ADR 0004 or schedule Supabase Auth + Supabase repositories (needs `@supabase/ssr`, a dependency decision).
-3. With the owner's OK, push `20261121140000_cancel_booking_rpc.sql` (`npx supabase db push --linked`), add it to `SERVICE_ONLY_RPCS` in `tests/db/schema.verify.test.ts`, and rerun `npm run db:verify` and `npm run test:integration`.
+3. Done 2026-11-21: `cancel_booking` migration pushed with the owner's OK (`npx supabase db push --linked --yes`) and added to `SERVICE_ONLY_RPCS`. `db:verify` 6 pass, `test:integration` 17 pass. Optional follow-up: a hosted test for `cancel_booking` in `tests/contracts/reservation-contract.ts`.
 4. Implement the SolvaPay sandbox adapter behind `PaymentAdapter` once a sandbox key exists (`SOLVAPAY_SECRET_KEY`, server-only).
 5. Planning questions already raised by agents: accept the extra `rematch: "booking_failed"` outcome; where the manual-booking policy check should live (`manual-booking.ts` vs `src/lib/bookings`); the added rule "max item weight ≤ total capacity"; booking reference = first 8 characters of the id; decorative copy added by the restyle (eyebrow labels).
 

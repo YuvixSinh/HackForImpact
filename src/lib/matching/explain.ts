@@ -24,7 +24,9 @@ export function compromiseFor(failure: string, shipment: MatchableShipment, list
 export function explain(options: MatchCandidate[], isExact: boolean, preference: OptimisationPreference): string {
   const best = options[0];
   if (!best) return "No exact match and no close alternatives: nothing is going this way in time. Try a later deadline or another mode.";
-  const facts = `${formatPence(best.totalPricePence)}, arrives with ${Math.round(best.deadlineMarginHours)} h to spare, ${best.co2Kg} kg CO₂ (${best.co2SavedKg} kg less than a dedicated vehicle)`;
+  const margin = Math.round(best.deadlineMarginHours);
+  const timing = margin < 0 ? `arrives ${-margin} h late` : `arrives with ${margin} h to spare`;
+  const facts = `${formatPence(best.totalPricePence)}, ${timing}, ${best.co2Kg} kg CO₂ (${best.co2SavedKg} kg less than a dedicated vehicle)`;
   if (!isExact) {
     return `No exact match. Closest alternative: ${facts}. It differs from your request: ${best.compromises.join("; ")}.`;
   }

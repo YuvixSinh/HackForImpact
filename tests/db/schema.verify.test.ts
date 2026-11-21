@@ -14,7 +14,7 @@ const TABLES = [
   "tracking_events",
   "audit_events",
 ];
-const SERVICE_ONLY_RPCS = ["reserve_capacity", "confirm_booking", "release_reservation", "autoship_schema_report"];
+const SERVICE_ONLY_RPCS = ["reserve_capacity", "confirm_booking", "release_reservation", "cancel_booking", "autoship_schema_report"];
 
 type Report = {
   tables: Record<string, { rls: boolean; policies: number; service_role_can_select: boolean; authenticated_can_select: boolean }>;

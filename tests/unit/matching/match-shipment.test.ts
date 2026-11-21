@@ -85,4 +85,11 @@ describe("matching and ranking", () => {
     const none = matchShipment(shipment(), [], FACTORS);
     expect(none.explanation).toMatch(/no .*match/i);
   });
+
+  it("describes a late alternative as late, not as negative time to spare", () => {
+    const late = listing({ id: "late", arrivalAt: hoursFromNow(102) });
+    const result = matchShipment(shipment({ deadlineAt: hoursFromNow(96) }), [late], FACTORS);
+    expect(result.explanation).toContain("arrives 6 h late");
+    expect(result.explanation).not.toMatch(/-\d+ h to spare/);
+  });
 });
