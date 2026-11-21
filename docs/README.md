@@ -10,6 +10,7 @@ These documents are the project’s durable context. Keep them accurate as imple
 | [`architecture.md`](architecture.md) | Implemented structure, components, data flow, boundaries, operations | System structure or deployment changes |
 | [`tasks.md`](tasks.md) | Ordered, actionable work and completion status | Work is planned, reordered, started, or finished |
 | [`initial-plans.md`](initial-plans.md) | Individual teammates’ first-pass proposals | A teammate adds or revises an initial plan |
+| [`claude-build-prompts.md`](claude-build-prompts.md) | Staged implementation prompts and review gates for Claude Code | Before assigning or reviewing implementation work |
 | [`decisions/`](decisions/) | Context, options, and rationale for consequential choices | A decision is hard to reverse or affects multiple areas |
 | [`templates/`](templates/) | Reusable blank document formats | The framework’s documentation approach changes |
 

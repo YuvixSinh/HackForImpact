@@ -12,6 +12,8 @@ A reusable starting structure for projects worked on with coding agents. The goa
 
 Each teammate can record an initial proposal in [`docs/initial-plans.md`](docs/initial-plans.md). Codex synthesizes the plans into the spec and task board; Claude Code implements the agreed tasks.
 
+Use [`docs/claude-build-prompts.md`](docs/claude-build-prompts.md) to give Claude Code one implementation stage at a time and review its checks before moving forward.
+
 ## Repository map
 
 | Path | Purpose |
@@ -24,6 +26,7 @@ Each teammate can record an initial proposal in [`docs/initial-plans.md`](docs/i
 | `docs/architecture.md` | Current system structure and important boundaries |
 | `docs/tasks.md` | Ordered work board with dependencies and completion status |
 | `docs/initial-plans.md` | Individual team members’ initial proposals |
+| `docs/claude-build-prompts.md` | Staged Claude Code implementation and review prompts |
 | `docs/decisions/` | Durable records of significant technical/product decisions |
 | `docs/templates/` | Copyable starting documents for new projects |
 | `src/` | Application or library source code |
