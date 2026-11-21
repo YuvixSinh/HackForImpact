@@ -69,7 +69,7 @@ Before marking work complete, run `npm run lint`, `npm run typecheck`, `npm test
 
 ### Hosted Supabase checks
 
-These run against a linked hosted Supabase development project (no Docker needed) and fail if the variables in `.env.local` are missing. They have not yet been run against a project.
+These run against the linked hosted Supabase project (no Docker needed) and fail if the variables in `.env.local` are missing. They passed on 2026-11-21: schema verification 6/6 and hosted integration 17/17. The current project is CLI-labeled `production` and is used with prototype test data.
 
 1. Create a Supabase development project, then copy its URL, anon key, and service-role key into `.env.local`.
 2. Sign in and link (prompts for an access token and the database password):
@@ -78,7 +78,7 @@ These run against a linked hosted Supabase development project (no Docker needed
 
 | Purpose | Command | Notes |
 | --- | --- | --- |
-| Apply migrations | `npx supabase db push --linked` | Applies `supabase/migrations/*.sql`. |
+| Apply migrations | `npx supabase db push --remote --yes` | Applies `supabase/migrations/*.sql` to the linked project. |
 | Verify schema | `npm run db:verify` | RLS on every table, policies present, reservation RPCs limited to the service role. |
 | Integration tests | `npm run test:integration` | Reservation contract against the RPCs and account isolation as real users. Creates throwaway `@example.com` users and deletes them afterwards. |
 

@@ -17,7 +17,7 @@ const TABLES = [
 const SERVICE_ONLY_RPCS = ["reserve_capacity", "confirm_booking", "release_reservation", "autoship_schema_report"];
 
 type Report = {
-  tables: Record<string, { rls: boolean; policies: number }>;
+  tables: Record<string, { rls: boolean; policies: number; service_role_can_select: boolean; authenticated_can_select: boolean }>;
   functions: Record<string, { security_definer: boolean; anon_can_execute: boolean; authenticated_can_execute: boolean; service_role_can_execute: boolean }>;
   bookings_one_active_index: boolean;
 };
@@ -39,6 +39,8 @@ describe("hosted schema", () => {
     }
     for (const [table, info] of Object.entries(report.tables)) {
       expect(info.rls, `unexpected table without RLS: ${table}`).toBe(true);
+      expect(info.service_role_can_select, `${table} service_role access`).toBe(true);
+      expect(info.authenticated_can_select, `${table} authenticated access`).toBe(true);
     }
   });
 

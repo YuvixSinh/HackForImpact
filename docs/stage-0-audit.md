@@ -13,8 +13,8 @@
 
 ## Resolved decisions
 
-1. **Supabase for development — accepted hybrid approach.** Local development uses in-memory repositories and documented demo-auth behaviour, so neither Docker nor a local Supabase instance is required. Task 2 must also target a linked, hosted Supabase development project before it is complete; this is the authoritative environment for authentication, row-level security, and the reservation RPC.
-2. **Schema check — hosted integration check accepted.** SQL review alone is rejected. Task 2 applies migrations to the linked project with `npx supabase db push --linked`, runs `npm run db:verify` for RLS and RPC checks, and runs `npm run test:integration`. PGlite is not added; the integration environment verifies the actual Supabase/Postgres behaviour.
+1. **Supabase for development — accepted hybrid approach.** Local development uses in-memory repositories and documented demo-auth behaviour, so neither Docker nor a local Supabase instance is required. Task 2 targets a linked hosted Supabase project. The project used for this prototype is CLI-labeled `production` and holds test data.
+2. **Schema check — hosted integration check accepted.** SQL review alone is rejected. Task 2 applies migrations with `npx supabase db push --remote --yes`, runs `npm run db:verify` for RLS, API-role grants, and RPC checks, and runs `npm run test:integration`. PGlite is not added. All three checks passed on 2026-11-21.
 3. **SolvaPay fit and package — partially accepted.** Use `@solvapay/server` only on server routes for sandbox payment authorisation and checkout, wrapped in a `PaymentAdapter`. SolvaPay does not provide delivery escrow and therefore the requirement to hold funds until delivery is rejected. A local testing adapter is accepted for the complete demo payment lifecycle, including simulated settlement and provider payout. Production marketplace settlement needs a later provider decision.
 
 ## Assumption resolution

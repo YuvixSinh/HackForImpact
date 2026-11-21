@@ -1,6 +1,6 @@
 # Claude Code build prompts for AutoShip
 
-Use Claude Opus 5.5 with these prompts in order, one stage at a time. Do not send a later prompt until Claude reports the required checks passed and you have reviewed the changes. This keeps mistakes local: business rules are proven before UI depends on them, and payment/tracking integration comes after the core flow works.
+Use Claude Opus 5.5. Stages 0–3 are complete. The user may send Stages 4 and 5 together; after those pass, use `docs/claude-remaining-phases.md` as the single ordered runbook for all remaining work. Keep each task test-first and update `docs/tasks.md` only when acceptance criteria pass.
 
 ## Shared instruction for every stage
 

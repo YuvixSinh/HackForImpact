@@ -2,7 +2,7 @@
 
 ## System overview
 
-AutoShip is a Next.js TypeScript application with a web client and server-side route handlers. Supabase supplies hosted authentication and Postgres storage. Local development begins with an in-memory repository and switches to the hosted Supabase repository when credentials are supplied. The prototype uses interfaces around matching, payments, tracking, routing, and notifications so deterministic mock implementations can be replaced without changing product flows.
+AutoShip is a Next.js TypeScript application with a web client and server-side route handlers. Supabase supplies hosted Postgres storage; the current app uses documented demo authentication while real Supabase Auth remains future work. Local development begins with in-memory repositories and switches to hosted Supabase storage when credentials are supplied. The prototype uses interfaces around matching, payments, tracking, routing, and notifications so deterministic mock implementations can be replaced without changing product flows.
 
 ```mermaid
 flowchart LR
@@ -21,7 +21,7 @@ flowchart LR
 
 | Area | Responsibility | Depends on |
 | --- | --- | --- |
-| `src/app/` | Pages, route handlers, authentication boundaries, theme | Next.js, Supabase Auth |
+| `src/app/` | Pages, route handlers, authentication boundaries, theme | Next.js, `src/lib/auth/` |
 | `src/lib/auth/` | Demo sign-in (ADR 0004, proposed): role mapping, validation, scrypt passwords, HMAC-signed session tokens, `AuthService` | repositories |
 | `src/lib/server/` | Server-only: app context (repositories, demo users, auth), session cookie, and the account-scoped data access layer used by pages and route handlers | `src/lib/auth/`, `src/lib/db/` |
 | `src/components/` | Shared UI: site header, theme toggle, dashboard placeholders | `src/lib/theme/` |
@@ -34,7 +34,7 @@ flowchart LR
 | `src/lib/integrations/` | SolvaPay server adapter, payment simulator, routing, tracking, and notification adapters | external services |
 | `src/lib/domain/` | Typed domain records shared by every layer | none |
 | `src/lib/db/` | Repository interfaces scoped by `AccessContext` (the acting account); in-memory implementation (`memory/`); server-only Supabase adapters (`supabase/`, currently the reservation RPC gateway) | Supabase |
-| `supabase/migrations/` | Schema, row-level-security policies, `create_account`, and the `reserve_capacity` / `confirm_booking` / `release_reservation` RPCs | Supabase Postgres |
+| `supabase/migrations/` | Schema, row-level-security policies, explicit API-role grants, `create_account`, and the `reserve_capacity` / `confirm_booking` / `release_reservation` RPCs | Supabase Postgres |
 | `tests/` | Unit tests for pure rules and integration tests for flows | application services |
 
 ## Data model
@@ -85,8 +85,8 @@ The provider posts a delayed or cancelled tracking event. The server updates ETA
 
 - Local development uses the in-memory repository unless `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and the server-only `SUPABASE_SERVICE_ROLE_KEY` are present.
 - Reservation RPCs are executable by the service role only. The Next.js server resolves the shipper account from the session and passes the price and CO₂ computed by the matching engine, so browsers cannot set booking prices. Reservation is a conditional capacity decrement under row locks, with a unique index allowing one `reserved`/`confirmed` booking per shipment. The in-memory repository passes the same contract suite (`tests/contracts/reservation-contract.ts`).
-- Row-level security: account members see their own records; bookings and tracking events are visible to both the shipper and provider accounts; active listings with remaining capacity and emissions factors are readable by any signed-in user; providers cannot edit capacity figures directly; anonymous visitors get no table access. A hosted Supabase development project is the required integration-test environment; local Docker is not required.
-- Task 2 applies migrations to that linked development project using the Supabase CLI through `npx`, then runs a committed database-verification script and integration tests. These checks, rather than SQL review alone, verify migration application, row-level security, and reservation semantics.
+- Row-level security: account members see their own records; bookings and tracking events are visible to both the shipper and provider accounts; active listings with remaining capacity and emissions factors are readable by any signed-in user; providers cannot edit capacity figures directly; anonymous visitors get no table access. A linked hosted Supabase project is the integration-test environment; local Docker is not required. The current linked project is CLI-labeled `production` and is used for this prototype's test data.
+- Task 2 applies migrations to the linked project using `npx supabase db push --remote --yes`, then runs the committed database-verification script and integration tests. These checks, rather than SQL review alone, verify migration application, API-role grants, row-level security, and reservation semantics.
 - Environment variables contain Supabase and SolvaPay server credentials only; commit an `.env.example` with variable names and no secrets. Service-role and SolvaPay keys must never use a `NEXT_PUBLIC_` prefix.
 - Vercel hosts the app and API. Seed scripts create deterministic demo accounts, trips, shipments, factors, and tracking events.
 - The MVP starts an Autopilot run on user submission. Scheduled matching and background jobs come after the complete synchronous demo flow is reliable.

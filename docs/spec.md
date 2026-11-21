@@ -85,7 +85,7 @@ Organisations/accounts, users, locations, shipments, provider capacity listings/
 ## 5. Technical constraints
 
 - **Application:** TypeScript web application built as a Next.js app, styled with Tailwind CSS, deployed to Vercel.
-- **Data and authentication:** Supabase Auth and Postgres with row-level security. Development starts with an in-memory repository so the app can run without local Docker, while a linked hosted Supabase development project is required to verify migrations, row-level security, and reservation RPCs before account work is complete.
+- **Data and authentication:** Supabase Auth and Postgres with row-level security. Development starts with an in-memory repository so the app can run without local Docker, while a linked hosted Supabase project is used to verify migrations, API-role grants, row-level security, and reservation RPCs. The current linked project is CLI-labeled `production` and is used for prototype test data.
 - **Payments:** Use `@solvapay/server` behind a server-only adapter. SolvaPay sandbox checkout/spending-policy capabilities are integrated when configured; delivery escrow and provider settlement stay simulated and are deferred to a future marketplace-payment design. Keep credentials server-side.
 - **External services:** Use deterministic mock routing, emissions, tracking, capacity, and notification services behind interfaces. Real services can replace them later.
 - **Quality:** Implement feature work test-first. Use unit tests for matching and policy logic and an integration test for the automatic booking flow.
