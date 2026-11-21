@@ -4,6 +4,7 @@ import { createDemoUserStore, type DemoUserStore } from "@/lib/auth/demo-users";
 import { createAuthService, type AuthService } from "@/lib/auth/service";
 import { createInMemoryRepositories } from "@/lib/db/memory";
 import type { Repositories } from "@/lib/db/repositories";
+import { seedShowcase } from "@/lib/demo/showcase-seed";
 
 export type AppContext = { repos: Repositories; users: DemoUserStore; auth: AuthService };
 
@@ -28,7 +29,12 @@ export function getAppContext(): AppContext {
   if (!holder.__autoshipContext) {
     const repos = createInMemoryRepositories();
     const users = createDemoUserStore();
-    holder.__autoshipContext = { repos, users, auth: createAuthService({ repos, users, secret: sessionSecret() }) };
+    const auth = createAuthService({ repos, users, secret: sessionSecret() });
+    holder.__autoshipContext = { repos, users, auth };
+    // Live-demo showcase provider (in-memory, finishes within the first request). Off in tests.
+    if (process.env.NODE_ENV !== "test" && process.env.SHOWCASE_SEED !== "false") {
+      void seedShowcase({ repos, auth, now: new Date() }).catch((error) => console.error("Showcase seed failed:", error instanceof Error ? error.message : error));
+    }
   }
   return holder.__autoshipContext;
 }

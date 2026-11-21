@@ -105,6 +105,32 @@ Limits of this sandbox mapping: every shipper account pays from the one configur
 
 Copy the directory, then replace all bracketed prompts in the active docs. Make `docs/spec.md` and `docs/tasks.md` specific to the new project, document the actual stack and commands, and remove folders or guidance that do not apply. Keep the root agent files as pointers to the shared workflow.
 
+## Live demo script
+
+Double-click `START.bat` to run the app on http://localhost:3100 (port 3000 is often taken by other tools) and open the sign-in page. `STOP.bat` stops it.
+
+Every server start, and every demo reset, seeds one imaginary provider, **Kestrel Courier Co.** (`courier@demo.autoship.test`, password `autoship-demo-2030`), with three identical Bristol → London road services that differ only in price: **£100, £200 and £300**, flat (no per-kg charge), max item 100 × 100 × 100 cm. Departures are 30 hours after the server started. Code: `src/lib/demo/showcase.ts`; test: `tests/integration/app/showcase.test.ts`.
+
+On stage:
+
+1. Create account → Business shipper → any name, email and password.
+2. Fill the shipment form:
+
+| Field | Value |
+| --- | --- |
+| Item description | anything, e.g. "Demo crate" |
+| Pickup / Destination | `Bristol` / `London` |
+| Ready from (UTC) | today, a few hours from now |
+| Deliver by (UTC) | 4 days from today |
+| Length / Width / Height cm | `100` / `100` / `100` |
+| Weight kg | `10` |
+| Value £ / Budget £ | `500` / `150` |
+| Transport / Optimise for / Urgency | leave the defaults (Any, Balanced, Standard) |
+
+3. Press **Ship it**. Autopilot ranks all three options and books the **£100** one automatically. £100 is exactly the default automatic limit, so no approval is needed. The booking card shows the reference, receipt and CO₂.
+
+Notes: start the app on the day of the demo, because the departures are relative to the start time. Use **Ship it**, not "Compare options myself", which currently saves the shipment without listing options. With SolvaPay switched on (`SOLVAPAY_SECRET_KEY` set), the £100 booking needs at least 1,000,000 sandbox credits on the configured customer, or the payment is declined. With the key empty, the testing adapter approves it.
+
 ## Demo data
 
 The app runs on in-memory data, so the scripted demo dataset (Milestone 5) can be rebuilt at any time. Reset it with the "Reset demo data" button (`src/components/demo/reset-demo-button.tsx`) or `curl -X POST http://localhost:3000/api/demo/reset`. Reset is allowed when `NODE_ENV` is not `production`, or when `DEMO_RESET_ENABLED=true` is set. It replaces all data (everyone is signed out) and returns a summary of each scenario's expected and actual outcome. All dates are relative to the reset time.

@@ -5,6 +5,7 @@ import { createAuthService } from "@/lib/auth/service";
 import { createBookingService } from "@/lib/bookings/service";
 import { createInMemoryRepositories } from "@/lib/db/memory";
 import { seedDemo, type DemoSeedSummary } from "@/lib/demo/seed";
+import { seedShowcase } from "@/lib/demo/showcase-seed";
 import { createTestingPaymentAdapter } from "@/lib/payments/testing-adapter";
 import type { AppContext } from "./app-context";
 
@@ -37,6 +38,7 @@ export async function resetDemoContext(now: Date = new Date()): Promise<DemoSeed
   const auth = createAuthService({ repos, users, secret: sessionSecret() });
   const booking = createBookingService({ repos, payments: createTestingPaymentAdapter() });
   const summary = await seedDemo({ repos, users, auth, booking, now });
+  await seedShowcase({ repos, auth, now });
   holder.__autoshipContext = { repos, users, auth };
   return summary;
 }
