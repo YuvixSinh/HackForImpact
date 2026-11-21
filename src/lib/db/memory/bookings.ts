@@ -86,6 +86,22 @@ export function createMemoryBookings(store: MemoryStore): BookingRepository {
       return result;
     },
 
+    async cancel(ctx, bookingId) {
+      const booking = store.bookings.get(bookingId);
+      if (!booking || !isParty(ctx, booking)) return { ok: false, reason: "booking_not_found" };
+      if (!ACTIVE_BOOKING_STATUSES.includes(booking.status)) return { ok: false, reason: "not_active" };
+      const now = store.now();
+      booking.status = "cancelled";
+      booking.updatedAt = now;
+      const listing = store.listings.get(booking.capacityListingId);
+      if (listing) {
+        listing.remainingCapacityKg = Math.min(listing.totalCapacityKg, listing.remainingCapacityKg + booking.reservedWeightKg);
+        listing.updatedAt = now;
+      }
+      store.recordAudit(booking.shipperAccountId, { actorUserId: null, action: "booking.cancelled", entityType: "booking", entityId: bookingId });
+      return { ok: true, booking: copy(booking) };
+    },
+
     async getById(ctx, id) {
       const booking = store.bookings.get(id);
       return booking && isParty(ctx, booking) ? copy(booking) : null;

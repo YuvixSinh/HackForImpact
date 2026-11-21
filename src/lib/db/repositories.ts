@@ -65,7 +65,16 @@ export interface BookingRepository extends ReservationGateway {
   /** Visible to the booking's shipper and provider accounts. */
   getById(ctx: AccessContext, id: Id): Promise<Booking | null>;
   listForAccount(ctx: AccessContext): Promise<Booking[]>;
+  /**
+   * `reserved`/`confirmed` → `cancelled`, restoring the reserved capacity exactly once.
+   * Callable by the booking's provider or shipper (Supabase RPC `cancel_booking`).
+   */
+  cancel(ctx: AccessContext, bookingId: Id): Promise<CancelBookingResult>;
 }
+
+export type CancelBookingResult =
+  | { ok: true; booking: Booking }
+  | { ok: false; reason: "booking_not_found" | "not_active" };
 
 export interface TrackingRepository {
   /** Only the booking's provider account may post status events. */

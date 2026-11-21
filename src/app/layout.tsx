@@ -1,4 +1,5 @@
 import type { Metadata, Viewport } from "next";
+import { BackgroundField } from "@/components/background-field";
 import { SiteHeader } from "@/components/site-header";
 import { ThemeScript } from "@/components/theme-script";
 import "./globals.css";
@@ -21,8 +22,9 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
         <ThemeScript />
       </head>
       <body className="min-h-screen font-sans antialiased">
+        <BackgroundField />
         <SiteHeader />
-        <main className="mx-auto w-full max-w-5xl px-4 py-8 sm:px-6 sm:py-12">{children}</main>
+        <main className="relative z-10 mx-auto w-full max-w-5xl px-4 py-10 sm:px-6 sm:py-16">{children}</main>
       </body>
     </html>
   );

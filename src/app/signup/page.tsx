@@ -11,9 +11,10 @@ export default async function SignUpChooserPage() {
   const viewer = await getViewer();
   if (viewer) redirect(dashboardPath(viewer.account));
   return (
-    <div className="space-y-6">
-      <header className="space-y-1">
-        <h1 className="text-2xl font-semibold tracking-tight">Create an account</h1>
+    <div className="rise-in space-y-6">
+      <header className="space-y-2">
+        <p aria-hidden="true" className="eyebrow">Account type</p>
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">Create an account</h1>
         <p className="text-sm text-ink-muted">Choose the type of account. You can&apos;t change it later.</p>
       </header>
       <RoleChooser />

@@ -8,7 +8,8 @@ A reusable starting structure for projects worked on with coding agents. The goa
 2. Read [`AGENTS.md`](AGENTS.md) for shared working rules. Codex planning notes are in [`CODEX.md`](CODEX.md), and Claude Code implementation notes are in [`CLAUDE.md`](CLAUDE.md).
 3. Read [`docs/README.md`](docs/README.md) to find the authoritative planning documents.
 4. Read [`docs/spec.md`](docs/spec.md) for intended behavior and [`docs/tasks.md`](docs/tasks.md) for the ordered work.
-5. Follow the setup and validation commands recorded below once a project fills them in.
+5. Read [`docs/handoff.md`](docs/handoff.md) for the current state, verified results, demo script, known gaps, and next actions.
+6. Follow the setup and validation commands recorded below.
 
 Each teammate can record an initial proposal in [`docs/initial-plans.md`](docs/initial-plans.md). Codex synthesizes the plans into the spec and task board; Claude Code implements the agreed tasks.
 
@@ -85,3 +86,23 @@ These run against the linked hosted Supabase project (no Docker needed) and fail
 ## Starting a project from this framework
 
 Copy the directory, then replace all bracketed prompts in the active docs. Make `docs/spec.md` and `docs/tasks.md` specific to the new project, document the actual stack and commands, and remove folders or guidance that do not apply. Keep the root agent files as pointers to the shared workflow.
+
+## Demo data
+
+The app runs on in-memory data, so the scripted demo dataset (Milestone 5) can be rebuilt at any time. Reset it with the "Reset demo data" button (`src/components/demo/reset-demo-button.tsx`) or `curl -X POST http://localhost:3000/api/demo/reset`. Reset is allowed when `NODE_ENV` is not `production`, or when `DEMO_RESET_ENABLED=true` is set. It replaces all data (everyone is signed out) and returns a summary of each scenario's expected and actual outcome. All dates are relative to the reset time.
+
+Demo accounts, all with the shared password `autoship-demo-2030` (demo only, published here; never use it for real data; `GET /api/demo/reset` shows these in development):
+
+| Email | Account |
+| --- | --- |
+| `shipper@demo.autoship.test` | Verdant Ceramics Ltd (business shipper) |
+| `road@demo.autoship.test` | Northline Haulage (road provider) |
+| `freight@demo.autoship.test` | BlueArc Freight (sea and air provider) |
+
+| Scenario | Flow shown |
+| --- | --- |
+| Tableware to the Manchester showroom | Automatic booking, cheapest (fills an empty return leg) |
+| Returned stock to the London warehouse | Automatic booking, balanced |
+| Trade-show display to Manchester | Automatic booking, fastest |
+| Pallet export to Rotterdam | Price approval (best option is over the £100 limit) |
+| Critical replacement part to Edinburgh | Critical shipment with no exact match (closest alternative misses the deadline) |
