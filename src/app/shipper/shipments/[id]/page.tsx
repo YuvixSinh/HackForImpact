@@ -1,11 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  approveAction,
-  bookOptionAction,
-  declineAction,
-} from "@/app/actions/approvals";
+import { approveAction, bookOptionAction, declineAction } from "@/app/actions/approvals";
 import { AgentWorkflow } from "@/components/shipments/agent-workflow";
 import { ApprovalCard } from "@/components/shipments/approval-card";
 import { BookingCard } from "@/components/shipments/booking-card";
@@ -60,14 +56,10 @@ export default async function ShipmentPage({
     ? simulatePosition(activeBooking, new Date())
     : null;
   const disrupted = trackingEvents.some((e) => e.status === "delayed");
-  const coords = routeCoordinates(
-    shipment.pickupLocation,
-    shipment.destinationLocation,
-  );
+  const coords = routeCoordinates(shipment.pickupLocation, shipment.destinationLocation);
   const canBookManually = !booking && !approval && options.length > 0;
   const chosenOptionId = activeBooking
-    ? (options.find((o) => o.listingId === activeBooking.capacityListingId)
-        ?.id ?? null)
+    ? (options.find((o) => o.listingId === activeBooking.capacityListingId)?.id ?? null)
     : (approval?.recommendedOptionId ?? options[0]?.id ?? null);
   const outcome = activeBooking
     ? "booked"
@@ -85,16 +77,11 @@ export default async function ShipmentPage({
     reasons: approval?.reasons ?? [],
     maxAutoPricePence: view.maxAutoPricePence,
     optimisation: shipment.optimisation,
-    payment: booking
-      ? {
-          pricePence: booking.pricePence,
-          receiptReference: booking.receiptReference,
-        }
-      : null,
+    payment: booking ? { pricePence: booking.pricePence, receiptReference: booking.receiptReference } : null,
   });
 
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-6">
       <div>
         <Link href="/shipper" className="text-sm text-ink-muted hover:text-ink">
           ← Dashboard
@@ -127,13 +114,7 @@ export default async function ShipmentPage({
         </dl>
       </div>
 
-      {workflow.length > 0 && (
-        <AgentWorkflow
-          steps={workflow}
-          options={options}
-          chosenOptionId={chosenOptionId}
-        />
-      )}
+      {workflow.length > 0 && <AgentWorkflow steps={workflow} options={options} chosenOptionId={chosenOptionId} />}
 
       {booking && <BookingCard booking={booking} />}
 
@@ -164,10 +145,7 @@ export default async function ShipmentPage({
               disrupted={disrupted}
             />
           )}
-          <TrackingTimeline
-            events={trackingEvents}
-            bookedAt={activeBooking.createdAt}
-          />
+          <TrackingTimeline events={trackingEvents} bookedAt={activeBooking.createdAt} />
         </section>
       )}
 
@@ -191,7 +169,7 @@ export default async function ShipmentPage({
         <RecommendationPanel
           isExactMatch={view.isExactMatch}
           explanation={view.explanation}
-          recommended={options[0] ?? null}
+          recommended={options.find((o) => o.id === approval?.recommendedOptionId) ?? options[0] ?? null}
         />
       )}
 
@@ -244,6 +222,6 @@ export default async function ShipmentPage({
           )}
         </section>
       )}
-    </main>
+    </div>
   );
 }

@@ -86,6 +86,12 @@ describe("matching and ranking", () => {
     expect(none.explanation).toMatch(/no .*match/i);
   });
 
+  it("never says an option arrives 0 hours late", () => {
+    const late = listing({ id: "late", arrivalAt: hoursFromNow(96.4) });
+    const result = matchShipment(shipment({ deadlineAt: hoursFromNow(96) }), [late], FACTORS);
+    expect(result.options[0].compromises).toEqual(["Arrives 1 hour after your deadline"]);
+  });
+
   it("describes a late alternative as late, not as negative time to spare", () => {
     const late = listing({ id: "late", arrivalAt: hoursFromNow(102) });
     const result = matchShipment(shipment({ deadlineAt: hoursFromNow(96) }), [late], FACTORS);

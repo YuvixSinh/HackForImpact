@@ -2,12 +2,12 @@
 
 import { revalidatePath } from "next/cache";
 import type { BookingService } from "@/lib/autopilot/run";
-import { createBookingService } from "@/lib/bookings/service";
 import { AccessError } from "@/lib/db/types";
 import type { TrackingStatus } from "@/lib/domain/tracking";
-import { createPaymentAdapter } from "@/lib/payments";
 import { getAppContext } from "@/lib/server/app-context";
+import { getServices } from "@/lib/server/services";
 import { requireDashboardViewer } from "@/lib/server/session";
+import { parseTrackingEta } from "@/lib/tracking/eta";
 import { postStatus, TrackingTransitionError } from "@/lib/tracking/service";
 
 export type TrackingActionState = { ok: true; message: string } | { ok: false; error: string } | undefined;
@@ -21,10 +21,10 @@ const REMATCH_MESSAGES = {
   not_needed: "Status saved.",
 } as const;
 
-/** Uses the app's booking service when one is registered, otherwise builds the default one. */
+/** The app's shared booking service (one payment adapter per process). */
 function bookingService(): BookingService {
-  const ctx = getAppContext() as ReturnType<typeof getAppContext> & { booking?: BookingService };
-  return ctx.booking ?? createBookingService({ repos: ctx.repos, payments: createPaymentAdapter() });
+  // The shared per-process service, so payment references never restart at 1 for rebooks.
+  return getServices().booking;
 }
 
 /** Provider dashboard: post a tracking status for one of the provider's bookings. */
@@ -43,9 +43,8 @@ export async function postTrackingStatusAction(
   }
   let eta: string | null = null;
   if (typeof etaRaw === "string" && etaRaw) {
-    const parsed = new Date(etaRaw);
-    if (Number.isNaN(parsed.getTime())) return { ok: false, error: "Enter a valid new ETA." };
-    eta = parsed.toISOString();
+    eta = parseTrackingEta(etaRaw);
+    if (!eta) return { ok: false, error: "Enter a valid new ETA." };
   }
   if (status === "delayed" && !eta) return { ok: false, error: "Enter the new ETA for the delay." };
 

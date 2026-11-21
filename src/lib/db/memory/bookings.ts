@@ -76,6 +76,7 @@ export function createMemoryBookings(store: MemoryStore): BookingRepository {
     async release(ctx, bookingId) {
       const result = transition(ctx, bookingId, (b) => {
         b.status = "released";
+        if (b.paymentStatus === "pending") b.paymentStatus = "failed";
         const listing = store.listings.get(b.capacityListingId);
         if (listing) {
           listing.remainingCapacityKg = Math.min(listing.totalCapacityKg, listing.remainingCapacityKg + b.reservedWeightKg);
