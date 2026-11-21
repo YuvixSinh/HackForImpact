@@ -16,7 +16,7 @@ This file is the agent entry point and applies to the whole repository. Read it 
 
 - **Planning and implementation handoff:** Codex owns planning, requirements, task ordering, and acceptance criteria. Keep the agreed plan in `docs/spec.md` and `docs/tasks.md`. Claude Code implements that plan. If implementation reveals a product or scope decision, document the question and return it to Codex for a planning update before proceeding.
 - **Team input:** Capture each teammate’s initial proposal in `docs/initial-plans.md`. Synthesize accepted work into the authoritative spec and task board; the individual plans are input, not additional task boards.
-- **Implementation handoff:** Give Claude Code one agreed task at a time, with acceptance criteria, relevant context, and required checks. It should report changes and verification without silently redefining scope.
+- **Implementation handoff:** Use `docs/claude-remaining-phases.md` as the ordered Claude Code runbook. Claude may receive the runbook at once, but must implement one task-board item at a time, verify its acceptance criteria, then continue without waiting for a separate prompt. It should report changes and verification without silently redefining scope.
 
 - For feature work, write or update a focused test in `tests/` first, run it to confirm it fails for the expected reason, then implement the smallest change and run the relevant tests again.
 - Do not add implementation code before its test unless the task is explicitly documentation, setup, or another non-feature change. Explain any necessary exception in the task notes.

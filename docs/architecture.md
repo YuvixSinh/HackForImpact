@@ -22,7 +22,7 @@ flowchart LR
 | Area | Responsibility | Depends on |
 | --- | --- | --- |
 | `src/app/` | Pages, route handlers, authentication boundaries, theme | Next.js, `src/lib/auth/` |
-| `src/lib/auth/` | Demo sign-in (ADR 0004, proposed): role mapping, validation, scrypt passwords, HMAC-signed session tokens, `AuthService` | repositories |
+| `src/lib/auth/` | Demo sign-in (ADR 0004, accepted for the prototype): role mapping, validation, scrypt passwords, HMAC-signed session tokens, `AuthService` | repositories |
 | `src/lib/server/` | Server-only: app context (repositories, demo users, auth), session cookie, and the account-scoped data access layer used by pages and route handlers | `src/lib/auth/`, `src/lib/db/` |
 | `src/components/` | Shared UI: site header, theme toggle, dashboard placeholders | `src/lib/theme/` |
 | `src/lib/theme/` | Theme resolution/persistence (`localStorage` key `autoship-theme`) and the inline `<head>` script that applies it before first paint | none |
@@ -34,7 +34,7 @@ flowchart LR
 | `src/lib/integrations/` | SolvaPay server adapter, payment simulator, routing, tracking, and notification adapters | external services |
 | `src/lib/domain/` | Typed domain records shared by every layer | none |
 | `src/lib/db/` | Repository interfaces scoped by `AccessContext` (the acting account); in-memory implementation (`memory/`); server-only Supabase adapters (`supabase/`, currently the reservation RPC gateway) | Supabase |
-| `supabase/migrations/` | Schema, row-level-security policies, explicit API-role grants, `create_account`, and the `reserve_capacity` / `confirm_booking` / `release_reservation` RPCs | Supabase Postgres |
+| `supabase/migrations/` | Schema, row-level-security policies, explicit API-role grants, `create_account`, reservation RPCs, and `cancel_booking` | Supabase Postgres |
 | `tests/` | Unit tests for pure rules and integration tests for flows | application services |
 
 ## Data model
@@ -75,7 +75,7 @@ The provider posts a delayed or cancelled tracking event. The server updates ETA
 | --- | --- | --- |
 | Capacity | Seeded and provider-created listings | Provider databases and freight exchanges |
 | Routes and distance | Fixed route distances | OpenRouteService or Google Distance Matrix |
-| Payment authorisation/checkout | `@solvapay/server` sandbox; testing adapter fallback | Production SolvaPay configuration |
+| Payment authorisation/checkout | SolvaPay sandbox REST API (`fetch`, no SDK dependency): prepaid credit balance check, then a usage debit; testing adapter fallback when no key is set | Production SolvaPay configuration, per-account customer mapping |
 | Delivery settlement and provider payout | Deterministic simulated adapter | Marketplace-payment provider/Stripe Connect design |
 | Tracking | Simulated timeline and map location | Telematics/GPS feed |
 | Notifications | In-app feed | Resend email and in-app preferences |

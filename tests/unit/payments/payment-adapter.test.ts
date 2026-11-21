@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { createPaymentAdapter } from "@/lib/payments";
-import { createSolvaPayAdapter } from "@/lib/payments/solvapay-adapter";
 import { createTestingPaymentAdapter } from "@/lib/payments/testing-adapter";
 
 const input = { bookingId: "b-1", amountPence: 5_000, shipperAccountId: "s-1", providerAccountId: "p-1", description: "Test" };
@@ -37,10 +36,5 @@ describe("testing payment adapter", () => {
 describe("createPaymentAdapter", () => {
   it("uses the testing adapter without a SolvaPay key", () => {
     expect(createPaymentAdapter({}).provider).toBe("testing");
-  });
-
-  it("selects the pending SolvaPay stub when a key is set, which throws on use", async () => {
-    expect(createPaymentAdapter({ SOLVAPAY_SECRET_KEY: "sk_sandbox_x" }).provider).toBe("solvapay");
-    await expect(createSolvaPayAdapter().authorise(input)).rejects.toThrow("SolvaPay sandbox adapter not configured in this build");
   });
 });

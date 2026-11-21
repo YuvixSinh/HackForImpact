@@ -11,7 +11,8 @@ These documents are the project’s durable context. Keep them accurate as imple
 | [`tasks.md`](tasks.md) | Ordered, actionable work and completion status | Work is planned, reordered, started, or finished |
 | [`handoff.md`](handoff.md) | Current state, verified results, demo script, known gaps, next actions | A build session ends or hands over |
 | [`initial-plans.md`](initial-plans.md) | Individual teammates’ first-pass proposals | A teammate adds or revises an initial plan |
-| [`claude-build-prompts.md`](claude-build-prompts.md) | Staged implementation prompts and review gates for Claude Code | Before assigning or reviewing implementation work |
+| [`claude-build-prompts.md`](claude-build-prompts.md) | Staged prompt context and review gates for Claude Code | Before assigning or reviewing implementation work |
+| [`claude-remaining-phases.md`](claude-remaining-phases.md) | Ordered single-file runbook for the remaining Claude Code implementation tasks | After matching and policy work is assigned |
 | [`decisions/`](decisions/) | Context, options, and rationale for consequential choices | A decision is hard to reverse or affects multiple areas |
 | [`templates/`](templates/) | Reusable blank document formats | The framework’s documentation approach changes |
 

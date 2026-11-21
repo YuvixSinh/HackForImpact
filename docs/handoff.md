@@ -15,7 +15,7 @@ AutoShip runs end to end locally on in-memory repositories with a demo sign-in. 
 | Unit + local integration | `npm test` | 36 files, 213 tests pass |
 | Build | `npm run build` | passes; 13 dynamic routes |
 | Hosted schema | `npm run db:verify` | 6 tests pass |
-| Hosted integration | `npm run test:integration` | 17 tests pass |
+| Hosted integration | `npm run test:integration` | 18 tests pass, including `cancel_booking` restoring capacity once |
 | Hosted migrations | `npx supabase migration list --linked` | 6 of 6 applied; `20261121140000_cancel_booking_rpc.sql` pushed 2026-11-21 with the owner's OK. `db:verify` now also checks `cancel_booking` (security definer, service role only) |
 | Demo reset in the running app | `POST /api/demo/reset` | 5/5 scenarios as expected (3 booked, 1 awaiting approval, 1 no match) |
 
@@ -76,7 +76,7 @@ Not checked in the browser: the rebooked shipment as it appears in the shipper f
 
 - **Pure business rules (no React, no DB):** `src/lib/matching/` (eligibility, estimate, score, explain, match), `src/lib/policy/` (evaluate, thresholds), `src/lib/shipments/validation.ts`, `src/lib/providers/listing-validation.ts`, `src/lib/sustainability/summary.ts`, `src/lib/tracking/simulate.ts`, `src/lib/feed/build.ts`.
 - **Orchestration:** `src/lib/autopilot/run.ts` (`runAutopilot`: match → store options → policy → book or create approval; flagged results never call booking), `src/lib/shipments/intake.ts`, `src/lib/bookings/service.ts` (reserve → authorise → confirm, or release on payment failure; `bookSelectedOption`, `decideApproval`), `src/lib/tracking/service.ts` (`postStatus`, disruption re-matching), `src/app/shipper/shipments/manual-booking.ts`.
-- **Payments:** `src/lib/payments/` — `createPaymentAdapter()` returns the deterministic testing adapter unless `SOLVAPAY_SECRET_KEY` is set; the SolvaPay adapter is a **stub that throws** (ADR 0003: no escrow).
+- **Payments:** `src/lib/payments/` — `createPaymentAdapter()` returns the deterministic testing adapter unless `SOLVAPAY_SECRET_KEY` is set; with a key it returns the SolvaPay **sandbox** adapter (`solvapay-adapter.ts`), which debits a prepaid credit balance over the REST API. Settlement and payout stay simulated (ADR 0003: no escrow). Setup is in README "SolvaPay sandbox".
 - **Data:** `src/lib/db/repositories.ts` (interfaces, all scoped by `AccessContext`), `src/lib/db/memory/` (in-memory implementation used by the app), `src/lib/db/supabase/` (only the reservation RPC gateway). SQL in `supabase/migrations/`.
 - **Server wiring:** `src/lib/server/app-context.ts` (repos, demo users, auth), `src/lib/server/services.ts` (`getServices()` → repos, payments, booking; one payment adapter per context), `src/lib/server/session.ts`, `src/lib/server/account-data.ts`, `src/lib/server/demo-reset.ts`.
 - **Routes and actions:** `src/app/` (`/`, `/signup[/role]`, `/signin`, `/shipper`, `/shipper/shipments/[id]`, `/provider`, `/api/shipments`, `/api/bookings`, `/api/demo/reset`); server actions in `src/app/actions/` (auth, shipments, approvals, provider, tracking).
@@ -86,23 +86,23 @@ Not checked in the browser: the rebooked shipment as it appears in the shipper f
 ## 6. Known gaps and limitations (be honest about these in demos)
 
 1. **App data is in memory.** It resets on restart and is not shared between serverless instances, so a Vercel deploy would lose data between requests. Supabase-backed repositories for everything except the reservation RPC gateway do not exist yet.
-2. **Demo sign-in, not Supabase Auth** (ADR 0004, still *proposed*). No email verification, password reset, or rate limiting.
-3. **SolvaPay:** testing adapter only; the sandbox adapter is a stub. No escrow; settlement and payout are simulated.
-4. **`cancel_booking` RPC is on the hosted project but unused by the app.** The app cancels through the in-memory repository, which is tested. No hosted test calls the RPC yet.
+2. **Demo sign-in, not Supabase Auth** (ADR 0004, accepted for the prototype). No email verification, password reset, or rate limiting. Keep it until Supabase Auth and persistent repositories can be introduced together.
+3. **SolvaPay:** the sandbox adapter is implemented and unit-tested against a fake `fetch`, but **has never been run against the live sandbox**. It uses one configured customer for every shipper, at most 100,000 units per booking, USD-pegged credits, and no reversal if confirmation fails after a debit. No escrow; settlement and payout are simulated.
+4. **`cancel_booking` RPC is on the hosted project but unused by the app.** The app cancels through the in-memory repository. A hosted integration test now verifies the RPC cancels once and restores capacity exactly once; wire it into the app when a Supabase booking repository is introduced.
 5. **Times are UTC.** Forms label `datetime-local` inputs "(UTC)". The tracking status form's delayed-ETA input is read in the server's local zone (minor inconsistency).
 6. **Delivered bookings** keep booking status `confirmed` (shipment becomes `delivered`); a delay's new ETA is stored on the tracking event, not the booking.
 7. **Budget** is collected but is not a hard filter (the spec does not list it); price limits come from approval policy.
 8. **Multi-leg routes** are not matched yet (single listing per option); routes match on exact origin/destination text, case-insensitive.
 9. **Demo reset route** has no auth. It is disabled in production unless `DEMO_RESET_ENABLED=true`; never set that on a public deploy.
-10. **Supabase project label:** the CLI reports the linked project as environment `production`. Treat it as the dev project only after confirming with the owner.
+10. **Supabase project label:** the CLI reports the linked project as environment `production`. The owner authorized prototype schema and test-data use; never use it for real business data.
 
 ## 7. Next actions, in order
 
 1. Done 2026-11-21: "Validate, secure, and document" is ticked; every task in `docs/tasks.md` is now checked. Results are in section 2.
-2. Decide with Codex: accept ADR 0004 or schedule Supabase Auth + Supabase repositories (needs `@supabase/ssr`, a dependency decision).
-3. Done 2026-11-21: `cancel_booking` migration pushed with the owner's OK (`npx supabase db push --linked --yes`) and added to `SERVICE_ONLY_RPCS`. `db:verify` 6 pass, `test:integration` 17 pass. Optional follow-up: a hosted test for `cancel_booking` in `tests/contracts/reservation-contract.ts`.
-4. Implement the SolvaPay sandbox adapter behind `PaymentAdapter` once a sandbox key exists (`SOLVAPAY_SECRET_KEY`, server-only).
-5. Planning questions already raised by agents: accept the extra `rematch: "booking_failed"` outcome; where the manual-booking policy check should live (`manual-booking.ts` vs `src/lib/bookings`); the added rule "max item weight ≤ total capacity"; booking reference = first 8 characters of the id; decorative copy added by the restyle (eyebrow labels).
+2. Resolved by Codex (ADR 0004): keep demo sign-in for the in-memory prototype; plan Supabase Auth and persistent repositories together before public or multi-user deployment.
+3. Done 2026-11-21: `cancel_booking` migration is applied and listed among service-role-only RPCs. `db:verify` passes 6 tests; `test:integration` passes 18 tests, including one-time capacity restoration.
+4. Done 2026-11-21 (not yet run live): SolvaPay sandbox adapter behind `PaymentAdapter`. Next: the owner adds `SOLVAPAY_SECRET_KEY`, `SOLVAPAY_PRODUCT_REF`, and `SOLVAPAY_CUSTOMER_REF` to `.env.local`, then makes one sandbox booking in the app. Planning questions for Codex: the prepaid-credit flow vs. browser checkout with payment intents; per-account SolvaPay customers; refunding a debit when confirmation fails; whether to adopt `@solvapay/server` instead of plain REST.
+5. Resolved by Codex in ADR 0005: keep the explicit booking-failure outcome, retain the shipper manual-booking use case in its current server-side app module, keep the max-item-weight validation, treat the short booking reference as display-only, and retain non-claiming decorative labels.
 
 ## 8. Working rules that saved time here
 

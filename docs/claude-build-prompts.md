@@ -7,7 +7,7 @@ Use Claude Opus 5.5. Stages 0–3 are complete. The user may send Stages 4 and 5
 Paste this at the start of every Claude Code task:
 
 ```text
-You are implementing AutoShip. Read AGENTS.md, CLAUDE.md, docs/spec.md, docs/architecture.md, and docs/tasks.md first. Work only on the assigned task below. Preserve existing user changes. For feature work, write or update focused tests first and run them to confirm they fail before implementation. Keep modules focused. Do not alter product scope, acceptance criteria, dependencies, or task ordering without reporting the issue. At the end, report: files changed; behavior delivered; tests/checks run and results; remaining risks or planning questions. Do not start the next task.
+You are implementing AutoShip. Read AGENTS.md, CLAUDE.md, docs/spec.md, docs/architecture.md, and docs/tasks.md first. Work on the assigned task or explicitly assigned ordered runbook. Preserve existing user changes. For feature work, write or update focused tests first and run them to confirm they fail before implementation. Keep modules focused. Do not alter product scope, acceptance criteria, dependencies, or task ordering without reporting the issue. When assigned a runbook, finish and verify one task-board item before continuing to the next. At the end, report files changed, behavior delivered, tests/checks run and results, and remaining risks or planning questions.
 ```
 
 ## Stage 0: Repository and implementation audit

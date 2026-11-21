@@ -13,4 +13,4 @@ Run the application locally against an in-memory repository that implements the 
 
 ## Consequences
 
-Stage 1 can start immediately without external credentials. Task 2 requires hosted Supabase credentials and verifies actual table grants, RLS, and RPC behaviour before account functionality depends on it. Repository contracts must stay equivalent across the in-memory and Supabase implementations. Verification passed on 2026-11-21 (`db:verify`: 6 tests; `test:integration`: 17 tests).
+Stage 1 can start immediately without external credentials. Task 2 requires hosted Supabase credentials and verifies actual table grants, RLS, and RPC behaviour before account functionality depends on it. Repository contracts must stay equivalent across the in-memory and Supabase implementations. Verification passed on 2026-11-21 (`db:verify`: 6 tests; `test:integration`: 18 tests).
