@@ -89,12 +89,45 @@ Not checked in the browser: the rebooked shipment as it appears in the shipper f
 2. **Demo sign-in, not Supabase Auth** (ADR 0004, accepted for the prototype). No email verification, password reset, or rate limiting. Keep it until Supabase Auth and persistent repositories can be introduced together.
 3. **SolvaPay:** the sandbox adapter is implemented and unit-tested against a fake `fetch`, but **has never been run against the live sandbox**. It uses one configured customer for every shipper, at most 100,000 units per booking, USD-pegged credits, and no reversal if confirmation fails after a debit. No escrow; settlement and payout are simulated.
 4. **`cancel_booking` RPC is on the hosted project but unused by the app.** The app cancels through the in-memory repository. A hosted integration test now verifies the RPC cancels once and restores capacity exactly once; wire it into the app when a Supabase booking repository is introduced.
-5. **Times are UTC.** Forms label `datetime-local` inputs "(UTC)". The tracking status form's delayed-ETA input is read in the server's local zone (minor inconsistency).
+5. **Times are UTC.** Forms label `datetime-local` inputs "(UTC)", including the tracking delay ETA (fixed 2026-11-21).
 6. **Delivered bookings** keep booking status `confirmed` (shipment becomes `delivered`); a delay's new ETA is stored on the tracking event, not the booking.
 7. **Budget** is collected but is not a hard filter (the spec does not list it); price limits come from approval policy.
 8. **Multi-leg routes** are not matched yet (single listing per option); routes match on exact origin/destination text, case-insensitive.
 9. **Demo reset route** has no auth. It is disabled in production unless `DEMO_RESET_ENABLED=true`; never set that on a public deploy.
 10. **Supabase project label:** the CLI reports the linked project as environment `production`. The owner authorized prototype schema and test-data use; never use it for real business data.
+
+### Bug review of `main` (2026-11-21)
+
+Three read-only reviewers (business logic, server/security, UI) plus a browser pass. No account-isolation break was found.
+
+**Fixed, with tests** (`tests/integration/app/booking-failure-paths.test.ts`, `tests/unit/tracking/eta.test.ts`, `match-shipment.test.ts`):
+- **Approve:** it now books first and marks the approval approved only on success. Before, a declined payment or full listing left the approval spent and the shipment stuck. An option id the approval didn't offer now returns an error instead of a 500.
+- **Confirm failure:** a failed confirm after a successful payment now releases the reservation and audits `booking.confirm_failed` with the payment reference, for a manual refund.
+- **Released bookings:** they now show payment `failed` instead of `pending`.
+- **Tracking action:** it uses the shared booking service and payment adapter, so rebook payment references no longer restart at 1.
+- **Delay ETA:** it is parsed as UTC (`src/lib/tracking/eta.ts`) and the input is labelled "(UTC)".
+- **Late options:** they are never described as "0 hours late".
+- **Shipment page:** the Recommendation panel follows the approval's recommended option, and the page no longer nests a second `<main>`.
+
+**Added:** the interactive OpenStreetMap tracking map (from `demo/showcase-provider`), without the agent-workflow tile or showcase data.
+
+**Open: needs a planning decision or a larger change:**
+- Approving re-prices from the current listing without re-checking policy if the provider edited it meanwhile.
+- Re-matching after a disruption can pick a listing that already departed (no clock in eligibility).
+- Delivered bookings stay `confirmed`, and a delay's new ETA isn't stored on the booking.
+- A cancel leaves payment `authorised` with no simulated refund, so a rebook means two charges.
+- Declining leaves the shipment "Awaiting your approval".
+- The demo reset route has no auth or CSRF check.
+- Approval expiry isn't enforced.
+- A double-click could create two pending manual-booking approvals.
+- The provider status post doesn't revalidate the shipment page.
+- The policy form loses rejected input.
+- Money formatting differs between shipper and provider pages.
+- Listing edits skip the max-item-weight check.
+- A missing emissions factor throws for all listings.
+- "Compare options myself" doesn't run matching.
+
+Not reproduced: in dev mode, the first form submit right after a server restart was sometimes ignored (the page was still compiling).
 
 ## 7. Next actions, in order
 

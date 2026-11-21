@@ -15,7 +15,7 @@ const PREFERENCE_REASON: Record<OptimisationPreference, string> = {
 export function compromiseFor(failure: string, shipment: MatchableShipment, listing: CapacityListing, marginHours: number) {
   if (failure === "mode_mismatch") return `Uses ${listing.mode} instead of ${shipment.modePreference}`;
   if (failure === "misses_deadline") {
-    const late = Math.round(-marginHours);
+    const late = Math.max(1, Math.round(-marginHours));
     return `Arrives ${late} hour${late === 1 ? "" : "s"} after your deadline`;
   }
   return failure;
@@ -24,8 +24,8 @@ export function compromiseFor(failure: string, shipment: MatchableShipment, list
 export function explain(options: MatchCandidate[], isExact: boolean, preference: OptimisationPreference): string {
   const best = options[0];
   if (!best) return "No exact match and no close alternatives: nothing is going this way in time. Try a later deadline or another mode.";
-  const margin = Math.round(best.deadlineMarginHours);
-  const timing = margin < 0 ? `arrives ${-margin} h late` : `arrives with ${margin} h to spare`;
+  const raw = best.deadlineMarginHours;
+  const timing = raw < 0 ? `arrives ${Math.max(1, Math.round(-raw))} h late` : `arrives with ${Math.round(raw)} h to spare`;
   const facts = `${formatPence(best.totalPricePence)}, ${timing}, ${best.co2Kg} kg CO₂ (${best.co2SavedKg} kg less than a dedicated vehicle)`;
   if (!isExact) {
     return `No exact match. Closest alternative: ${facts}. It differs from your request: ${best.compromises.join("; ")}.`;

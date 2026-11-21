@@ -52,7 +52,19 @@ export function createBookingService({ repos, payments }: BookingDeps): BookingS
         paymentReference: payment.paymentReference,
         receiptReference: payment.receiptReference,
       });
-      if (!confirmed.ok) return { ok: false, reason: confirmed.reason };
+      if (!confirmed.ok) {
+        // Payment went through but the booking could not be confirmed (e.g. cancelled meanwhile):
+        // free the space and leave an audit trail with the payment reference for a manual refund.
+        await repos.bookings.release(ctx, booking.id);
+        await repos.audit.record(ctx, {
+          actorUserId: null,
+          action: "booking.confirm_failed",
+          entityType: "booking",
+          entityId: booking.id,
+          details: { reason: confirmed.reason, paymentReference: payment.paymentReference, provider: payments.provider },
+        });
+        return { ok: false, reason: confirmed.reason };
+      }
       return { ok: true, bookingId: booking.id };
     },
   };
@@ -111,8 +123,14 @@ export async function decideApproval(
 
   const selectedOptionId = input.selectedOptionId ?? approval.recommendedOptionId;
   if (!selectedOptionId) return { ok: false, reason: "no_option_selected" };
-  const decided = await repos.approvals.decide(ctx, approval.id, { status: "approved", selectedOptionId });
-  if (!decided) return { ok: false, reason: "approval_not_pending" };
+  if (approval.status !== "pending") return { ok: false, reason: "approval_not_pending" };
+  if (!approval.optionIds.includes(selectedOptionId)) return { ok: false, reason: "option_not_offered" };
+
+  // Book first: if capacity or payment fails, the approval stays pending so the shipper can retry
+  // or choose another option. A second concurrent approve cannot double-book (one active booking per shipment).
+  const result = await bookSelectedOption(deps, ctx, { shipmentId: approval.shipmentId, optionId: selectedOptionId });
+  if (!result.ok) return result;
+  await repos.approvals.decide(ctx, approval.id, { status: "approved", selectedOptionId });
   await repos.audit.record(ctx, {
     actorUserId: null,
     action: "approval.approved",
@@ -120,7 +138,5 @@ export async function decideApproval(
     entityId: approval.id,
     details: { selectedOptionId },
   });
-
-  const result = await bookSelectedOption(deps, ctx, { shipmentId: approval.shipmentId, optionId: selectedOptionId });
-  return result.ok ? { ok: true, status: "booked", bookingId: result.bookingId } : result;
+  return { ok: true, status: "booked", bookingId: result.bookingId };
 }

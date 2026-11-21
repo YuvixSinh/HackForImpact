@@ -31,7 +31,7 @@ export function StatusActions({ bookingId, allowed }: { bookingId: string; allow
       </div>
       <div className="flex flex-wrap items-end gap-2">
         <label className="text-xs text-ink-muted">
-          New ETA (for delays)
+          New ETA for delays (UTC)
           <input type="datetime-local" name="eta" className="mt-1 block rounded-md border border-line bg-surface px-2 py-1 text-sm text-ink" />
         </label>
         <button type="submit" name="status" value="delayed" disabled={!can("delayed")} className={`${button} border border-accent-amber text-ink`}>

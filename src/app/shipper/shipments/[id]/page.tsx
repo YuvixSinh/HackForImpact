@@ -7,8 +7,10 @@ import { BookingCard } from "@/components/shipments/booking-card";
 import { formatDateTime, formatPence } from "@/components/shipments/format";
 import { OptionsList } from "@/components/shipments/option-card";
 import { RecommendationPanel } from "@/components/shipments/recommendation-panel";
+import { RouteMap } from "@/components/tracking/route-map";
 import { RouteProgress } from "@/components/tracking/route-progress";
 import { TrackingTimeline } from "@/components/tracking/timeline";
+import { routeCoordinates } from "@/lib/tracking/places";
 import { simulatePosition } from "@/lib/tracking/simulate";
 import { getServices } from "@/lib/server/services";
 import { requireDashboardViewer } from "@/lib/server/session";
@@ -34,10 +36,11 @@ export default async function ShipmentPage({ params }: { params: Promise<{ id: s
   const { shipment, options, approval, booking, activeBooking, trackingEvents, cancelledBookings } = view;
   const position = activeBooking ? simulatePosition(activeBooking, new Date()) : null;
   const disrupted = trackingEvents.some((e) => e.status === "delayed");
+  const coords = routeCoordinates(shipment.pickupLocation, shipment.destinationLocation);
   const canBookManually = !booking && !approval && options.length > 0;
 
   return (
-    <main className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-6">
+    <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-6">
       <div>
         <Link href="/shipper" className="text-sm text-ink-muted hover:text-ink">
           ← Dashboard
@@ -73,13 +76,25 @@ export default async function ShipmentPage({ params }: { params: Promise<{ id: s
           <h2 id="tracking-heading" className="eyebrow">
             Tracking
           </h2>
-          <RouteProgress
-            origin={shipment.pickupLocation}
-            destination={shipment.destinationLocation}
-            progress={position.progress}
-            label={position.label}
-            disrupted={disrupted}
-          />
+          {coords ? (
+            <RouteMap
+              origin={shipment.pickupLocation}
+              destination={shipment.destinationLocation}
+              from={coords.from}
+              to={coords.to}
+              progress={position.progress}
+              label={position.label}
+              disrupted={disrupted}
+            />
+          ) : (
+            <RouteProgress
+              origin={shipment.pickupLocation}
+              destination={shipment.destinationLocation}
+              progress={position.progress}
+              label={position.label}
+              disrupted={disrupted}
+            />
+          )}
           <TrackingTimeline events={trackingEvents} bookedAt={activeBooking.createdAt} />
         </section>
       )}
@@ -104,7 +119,7 @@ export default async function ShipmentPage({ params }: { params: Promise<{ id: s
         <RecommendationPanel
           isExactMatch={view.isExactMatch}
           explanation={view.explanation}
-          recommended={options[0] ?? null}
+          recommended={options.find((o) => o.id === approval?.recommendedOptionId) ?? options[0] ?? null}
         />
       )}
 
@@ -151,6 +166,6 @@ export default async function ShipmentPage({ params }: { params: Promise<{ id: s
           )}
         </section>
       )}
-    </main>
+    </div>
   );
 }
