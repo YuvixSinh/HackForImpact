@@ -14,7 +14,7 @@ The first release is a working prototype that demonstrates the full journey with
 ### Out of scope for the prototype
 
 - Real carrier, routing, mapping, email, customs, insurance, and live telemetry integrations.
-- Real financial transactions. SolvaPay uses its sandbox or testing adapter until production credentials and compliance are available.
+- Real financial transactions, delivery escrow, and marketplace settlement. SolvaPay uses its sandbox or testing adapter until production credentials and a separate marketplace-payment design are available.
 - Public marketing, pricing, contact, and other public pages beyond the authentication entry point.
 
 ## 2. MVP requirements
@@ -46,8 +46,8 @@ The first release is a working prototype that demonstrates the full journey with
 
 ### Booking, payment, and tracking
 
-- SolvaPay is visible in the booking flow and is responsible for policy-checked payment authorisation, held payment until delivery, provider payouts, and the booking receipt.
-- The prototype uses SolvaPay's sandbox when configured, with an adapter-compatible testing fallback. No secret or card data is stored in the client.
+- SolvaPay is visible in the booking flow and is responsible for policy-checked agent payment authorisation, checkout, and a payment receipt/reference. It does not hold funds for delivery escrow.
+- The prototype uses `@solvapay/server` in a server-only adapter when its sandbox is configured, with an adapter-compatible testing fallback. The fallback simulates authorisation, delivery settlement, provider payout, and failure states; no secret or card data is stored in the client.
 - A booking card shows its reference, chosen transport, price, collection time, ETA, estimated CO₂, CO₂ saved against a dedicated-vehicle baseline, and receipt.
 - Tracking uses simulated live map movement and a status timeline: booked, collected, in transit, delayed, delivered, and cancelled.
 - A cancellation or deadline-threatening delay re-runs matching. Autopilot rebooks only when the replacement meets delivery requirements and approval policy; it notifies the shipper either way.
@@ -85,8 +85,8 @@ Organisations/accounts, users, locations, shipments, provider capacity listings/
 ## 5. Technical constraints
 
 - **Application:** TypeScript web application built as a Next.js app, styled with Tailwind CSS, deployed to Vercel.
-- **Data and authentication:** Supabase Auth and Postgres with row-level security. The first demo may seed one shipper and provider dataset, but data boundaries must support real accounts.
-- **Payments:** SolvaPay agent sandbox adapter; use its test stand-in when the sandbox is not configured. Keep credentials server-side.
+- **Data and authentication:** Supabase Auth and Postgres with row-level security. Development starts with an in-memory repository so the app can run without local Docker, while a linked hosted Supabase development project is required to verify migrations, row-level security, and reservation RPCs before account work is complete.
+- **Payments:** Use `@solvapay/server` behind a server-only adapter. SolvaPay sandbox checkout/spending-policy capabilities are integrated when configured; delivery escrow and provider settlement stay simulated and are deferred to a future marketplace-payment design. Keep credentials server-side.
 - **External services:** Use deterministic mock routing, emissions, tracking, capacity, and notification services behind interfaces. Real services can replace them later.
 - **Quality:** Implement feature work test-first. Use unit tests for matching and policy logic and an integration test for the automatic booking flow.
 - **Security:** Validate server-side input, isolate organisation data, avoid client secrets, verify future webhooks, and keep a basic audit record of booking decisions.
@@ -104,4 +104,4 @@ Organisations/accounts, users, locations, shipments, provider capacity listings/
 
 ## 7. Deferred work
 
-CSV/Excel and Google Sheets import, email and API intake, live maps and telematics, real routing, provider licence verification, customs documentation, insurance, recurring/dynamic pricing, real email notifications, external freight exchanges, and production SolvaPay payments.
+CSV/Excel and Google Sheets import, email and API intake, live maps and telematics, real routing, provider licence verification, customs documentation, insurance, recurring/dynamic pricing, real email notifications, external freight exchanges, production SolvaPay payments, and delivery escrow/marketplace settlement.

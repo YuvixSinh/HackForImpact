@@ -25,7 +25,7 @@ Inspect the current repository against docs/spec.md and docs/architecture.md. Do
 **Prompt**
 
 ```text
-Complete only the first unchecked task in Milestone 1: set up the AutoShip application shell. Use Next.js, TypeScript, and Tailwind if the repository has no established stack. Implement a responsive app shell with persistent light/dark theme and placeholder shipper/provider routes. Add the minimum tests/checks appropriate to the chosen setup. Record exact verified commands in README.md. Do not add matching, bookings, payments, or mock shipment data yet.
+Read `docs/stage-0-audit.md` and its resolved decisions before starting. Complete only the first unchecked task in Milestone 1: set up the AutoShip application shell. Manually scaffold Next.js 16.4.6, TypeScript, Tailwind CSS v4, ESLint, and Vitest using npm. Set Node engines to `>=20.9.0`; add `.gitignore`, `.env.example` without secrets, responsive no-flash persistent light/dark theme, and placeholder `/shipper` and `/provider` routes. Add the minimum tests/checks appropriate to the setup and record exact verified commands in README.md. Do not add Supabase, matching, bookings, payments, or mock shipment data yet.
 ```
 
 **Review before continuing:** Run the listed commands yourself. Check desktop and narrow-window layout, then refresh to confirm the theme preference persists.
@@ -35,7 +35,7 @@ Complete only the first unchecked task in Milestone 1: set up the AutoShip appli
 **Prompt**
 
 ```text
-Complete only the next unchecked Milestone 1 task: domain models and database boundaries. Implement typed models and repository interfaces for accounts, shipments, capacity, policy, matches, approvals, bookings, tracking events, and emissions. Add Supabase schema/migrations and organisation isolation when Supabase is available; otherwise implement an in-memory repository behind the same interfaces and document the migration path. Create only minimal test fixtures; do not create the scripted mock-demo dataset until Milestone 5. Do not build the dashboards beyond what tests require.
+Complete only the next unchecked Milestone 1 task: domain models and database boundaries. Implement typed models and repository interfaces for accounts, shipments, capacity, policy, matches, approvals, bookings, tracking events, and emissions. Implement in-memory repositories for local development. Add Supabase migrations, RLS, and a reservation RPC for the linked hosted development project; verify them with `npx supabase db push --linked`, `npm run db:verify`, and `npm run test:integration`. Do not accept SQL review alone as schema verification. Create only minimal test fixtures; do not create the scripted mock-demo dataset until Milestone 5. Do not build dashboards beyond what tests require.
 ```
 
 **What it catches:** Data models that cannot represent approval, disruption, or provider flows; account data leaks; demos that need hand-edited database records.
@@ -85,7 +85,7 @@ Complete the next two Milestone 3 tasks: shipment intake plus comparison/approva
 **Prompt**
 
 ```text
-Complete the bookings, SolvaPay adapter, and feed-card task only. Build a server-only payment adapter with a sandbox implementation if configured and a testing fallback that follows the same interface. Implement atomic capacity reservation, receipt references, and failure-safe rollback. Add tests proving that concurrent/repeated booking cannot oversell capacity and that a payment failure confirms neither booking nor capacity reduction. Never expose payment secrets or accept real card data in the browser.
+Complete the bookings, SolvaPay adapter, and feed-card task only. Build a server-only `@solvapay/server` adapter for sandbox payment authorisation/checkout and a testing fallback that simulates authorisation, delivery settlement, provider payout, and failure. SolvaPay does not provide delivery escrow, so do not claim that money is held. Implement atomic capacity reservation, receipt references, and failure-safe rollback. Add tests proving that concurrent/repeated booking cannot oversell capacity and that a payment failure confirms neither booking nor capacity reduction. Never expose payment secrets or accept real card data in the browser.
 ```
 
 **What it catches:** Double booking, payment success shown before a confirmed reservation, and leaked credentials.
