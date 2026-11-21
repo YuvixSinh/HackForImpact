@@ -1,32 +1,28 @@
 import Link from "next/link";
-
-const entries = [
-  { href: "/shipper", title: "Shipper", text: "Send goods and let Autopilot find capacity." },
-  { href: "/provider", title: "Provider", text: "List spare road, sea, or air capacity." },
-];
+import { RoleChooser } from "@/components/auth/role-chooser";
 
 export default function HomePage() {
   return (
-    <div className="space-y-8">
+    <div className="space-y-10">
       <div className="max-w-2xl space-y-3">
         <h1 className="text-3xl font-semibold tracking-tight sm:text-4xl">Ship smarter, with less carbon.</h1>
         <p className="text-ink-muted">
-          AutoShip matches small-business shipments to spare transport capacity. Sign-in arrives in a later
-          milestone; for now, open a dashboard placeholder.
+          AutoShip matches small-business shipments to spare road, sea, and air capacity. Choose the account that fits
+          you to get started.
         </p>
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        {entries.map((entry) => (
-          <Link
-            key={entry.href}
-            href={entry.href}
-            className="rounded-2xl border border-line bg-surface p-6 transition-colors hover:border-brand"
-          >
-            <span className="block text-lg font-medium">{entry.title}</span>
-            <span className="mt-1 block text-sm text-ink-muted">{entry.text}</span>
-          </Link>
-        ))}
-      </div>
+      <section aria-labelledby="create-account" className="space-y-4">
+        <h2 id="create-account" className="text-lg font-medium">
+          Create an account
+        </h2>
+        <RoleChooser />
+      </section>
+      <p className="text-sm text-ink-muted">
+        Already have an account?{" "}
+        <Link href="/signin" className="font-medium text-brand underline-offset-4 hover:underline">
+          Sign in
+        </Link>
+      </p>
     </div>
   );
 }

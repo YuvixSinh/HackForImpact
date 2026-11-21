@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { serviceClient } from "../integration/support/supabase";
+import { serviceClient } from "../integration/hosted/support/supabase";
 
 const TABLES = [
   "accounts",

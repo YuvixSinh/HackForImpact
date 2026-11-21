@@ -22,6 +22,8 @@ flowchart LR
 | Area | Responsibility | Depends on |
 | --- | --- | --- |
 | `src/app/` | Pages, route handlers, authentication boundaries, theme | Next.js, Supabase Auth |
+| `src/lib/auth/` | Demo sign-in (ADR 0004, proposed): role mapping, validation, scrypt passwords, HMAC-signed session tokens, `AuthService` | repositories |
+| `src/lib/server/` | Server-only: app context (repositories, demo users, auth), session cookie, and the account-scoped data access layer used by pages and route handlers | `src/lib/auth/`, `src/lib/db/` |
 | `src/components/` | Shared UI: site header, theme toggle, dashboard placeholders | `src/lib/theme/` |
 | `src/lib/theme/` | Theme resolution/persistence (`localStorage` key `autoship-theme`) and the inline `<head>` script that applies it before first paint | none |
 | `src/features/shipments/` | Form validation, shipment display, manual comparison | shipment service |
@@ -47,6 +49,13 @@ flowchart LR
 All account-scoped records include an account identifier. Database row-level security must restrict records to their owner account, except for the controlled matching query that reads available provider listings.
 
 ## Important flows
+
+### Account entry and isolation (current: demo sign-in)
+
+1. `/` and `/signup` offer three paths: `/signup/business-shipper`, `/signup/individual-shipper`, `/signup/provider`. A server action validates input, creates the user and account (shipper + business/individual, or provider), and sets an HttpOnly signed session cookie.
+2. Each request resolves the viewer on the server: valid signature, unexpired, known user, and current membership of the claimed account.
+3. `/shipper` and `/provider` redirect visitors to `/signin` and the other account kind to its own dashboard.
+4. Pages and the read-only `/api/shipments` and `/api/bookings` handlers read only through `src/lib/server/account-data.ts`, which scopes repositories to the viewer's account. Another account's record returns 404 and a missing or invalid session returns 401.
 
 ### Autopilot booking
 

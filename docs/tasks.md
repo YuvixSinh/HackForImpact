@@ -14,9 +14,10 @@ Complete tasks in this order. Claude Code must read the linked specification and
   - Verification: `npx supabase db push --linked`, `npm run db:verify`, and `npm run test:integration`.
   - Status 2026-11-21: implementation done, hosted verification pending. Domain models, repository interfaces, in-memory repositories, three migrations (schema, RLS, RPCs), the Supabase reservation adapter, and hosted test suites are in place. Local checks pass (`npm test`: 38 tests, including the shared reservation contract and isolation against the in-memory store; lint; typecheck). Not complete until a hosted development project is linked and the three verification commands pass; without credentials they fail by design rather than skip.
 
-- [ ] **Create account entry and role-specific shells.** Add a clear sign-in/sign-up path for business shippers, individual shippers, and providers. Route each role to its own dashboard shell.
+- [x] **Create account entry and role-specific shells.** Add a clear sign-in/sign-up path for business shippers, individual shippers, and providers. Route each role to its own dashboard shell.
   - Acceptance: A demo user can enter either dashboard and cannot view another account's records.
   - Verification: Auth/access integration test.
+  - Done 2026-11-21 with the demo sign-in fallback (ADR 0004, proposed), because no hosted Supabase project is linked. `tests/integration/app/account-isolation.test.ts` (4 tests) runs through the real route handlers and session cookie: another account gets 404 for a shipment or booking, missing or forged sessions get 401, and lists contain only the caller's records. `npm test` (61 tests), lint, typecheck, and build pass. In the browser, all three sign-up paths work, sign-in and sign-out work, a wrong password gets a generic error, dashboards redirect visitors and the wrong account kind, and an unknown role gives 404. Open: real Supabase Auth and Supabase-backed repositories depend on the task above (hosted verification pending).
 
 ## Milestone 2: Matching and policy engine
 

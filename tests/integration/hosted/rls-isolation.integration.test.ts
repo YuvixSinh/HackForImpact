@@ -1,6 +1,6 @@
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { createSupabaseReservationGateway } from "@/lib/db/supabase/reservation";
-import { listingInput, reservationPricing, shipmentInput } from "../fixtures/domain";
+import { listingInput, reservationPricing, shipmentInput } from "../../fixtures/domain";
 import {
   anonClient,
   cleanupTestData,

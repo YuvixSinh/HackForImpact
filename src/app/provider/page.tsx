@@ -1,13 +1,10 @@
 import type { Metadata } from "next";
-import { DashboardPlaceholder } from "@/components/dashboard-placeholder";
+import { ProviderDashboard } from "@/components/dashboards/provider-dashboard";
+import { requireDashboardViewer } from "@/lib/server/session";
 
 export const metadata: Metadata = { title: "Provider dashboard" };
 
-const panels = [
-  { title: "Capacity listings", description: "Add or edit road, sea, and air services." },
-  { title: "Booked shipments", description: "Shipments booked on your capacity." },
-];
-
-export default function ProviderPage() {
-  return <DashboardPlaceholder title="Provider dashboard" panels={panels} />;
+export default async function ProviderPage() {
+  const viewer = await requireDashboardViewer("provider");
+  return <ProviderDashboard account={viewer.account} />;
 }

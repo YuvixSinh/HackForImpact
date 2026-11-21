@@ -1,6 +1,6 @@
 import { afterAll } from "vitest";
 import { createSupabaseReservationGateway } from "@/lib/db/supabase/reservation";
-import { describeReservationContract } from "../contracts/reservation-contract";
+import { describeReservationContract } from "../../contracts/reservation-contract";
 import { cleanupTestData, insertAccount, insertListing, insertShipment, serviceClient } from "./support/supabase";
 
 // Same contract as tests/unit/db/memory-reservation.test.ts, against the hosted RPCs.

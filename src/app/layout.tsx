@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { SiteHeader } from "@/components/site-header";
-import { themeInitScript } from "@/lib/theme/init-script";
+import { ThemeScript } from "@/components/theme-script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -18,7 +18,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
     // The init script sets the theme class before hydration, so server markup differs by design.
     <html lang="en" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+        <ThemeScript />
       </head>
       <body className="min-h-screen font-sans antialiased">
         <SiteHeader />
