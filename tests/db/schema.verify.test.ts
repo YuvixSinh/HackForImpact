@@ -64,14 +64,17 @@ describe("hosted schema", () => {
 
   it("matches the in-memory emissions factors", async () => {
     const { PROTOTYPE_EMISSIONS_FACTORS } = await import("@/lib/domain/emissions");
-    const { data, error } = await serviceClient().from("emissions_factors").select("*").order("mode");
+    const { data, error } = await serviceClient().from("emissions_factors").select("*");
     expect(error).toBeNull();
-    const rows = (data ?? []).map((r) => ({
-      mode: r.mode,
-      kgCo2PerTonneKm: Number(r.kg_co2_per_tonne_km),
-      dedicatedVehicleKgCo2PerKm: Number(r.dedicated_vehicle_kg_co2_per_km),
-      source: r.source,
-    }));
-    expect(rows).toEqual([...PROTOTYPE_EMISSIONS_FACTORS].sort((a, b) => a.mode.localeCompare(b.mode)));
+    const byMode = (a: { mode: string }, b: { mode: string }) => a.mode.localeCompare(b.mode);
+    const rows = (data ?? [])
+      .map((r) => ({
+        mode: r.mode,
+        kgCo2PerTonneKm: Number(r.kg_co2_per_tonne_km),
+        dedicatedVehicleKgCo2PerKm: Number(r.dedicated_vehicle_kg_co2_per_km),
+        source: r.source,
+      }))
+      .sort(byMode);
+    expect(rows).toEqual([...PROTOTYPE_EMISSIONS_FACTORS].sort(byMode));
   });
 });

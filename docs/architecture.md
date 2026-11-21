@@ -30,7 +30,9 @@ flowchart LR
 | `src/lib/policy/` | Flag rules, approval and auto-book decisions | organisation policy |
 | `src/lib/bookings/` | Atomic reservation, booking lifecycle, receipts | capacity and payment adapters |
 | `src/lib/integrations/` | SolvaPay server adapter, payment simulator, routing, tracking, and notification adapters | external services |
-| `src/lib/db/` | Supabase queries and organisation access controls | Supabase |
+| `src/lib/domain/` | Typed domain records shared by every layer | none |
+| `src/lib/db/` | Repository interfaces scoped by `AccessContext` (the acting account); in-memory implementation (`memory/`); server-only Supabase adapters (`supabase/`, currently the reservation RPC gateway) | Supabase |
+| `supabase/migrations/` | Schema, row-level-security policies, `create_account`, and the `reserve_capacity` / `confirm_booking` / `release_reservation` RPCs | Supabase Postgres |
 | `tests/` | Unit tests for pure rules and integration tests for flows | application services |
 
 ## Data model
@@ -72,7 +74,9 @@ The provider posts a delayed or cancelled tracking event. The server updates ETA
 
 ## Runtime and operations
 
-- Local development uses the in-memory repository unless `SUPABASE_URL`, a public Supabase key, and server-only Supabase credentials are present. A hosted Supabase development project is the required integration-test environment; local Docker is not required.
+- Local development uses the in-memory repository unless `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, and the server-only `SUPABASE_SERVICE_ROLE_KEY` are present.
+- Reservation RPCs are executable by the service role only. The Next.js server resolves the shipper account from the session and passes the price and CO₂ computed by the matching engine, so browsers cannot set booking prices. Reservation is a conditional capacity decrement under row locks, with a unique index allowing one `reserved`/`confirmed` booking per shipment. The in-memory repository passes the same contract suite (`tests/contracts/reservation-contract.ts`).
+- Row-level security: account members see their own records; bookings and tracking events are visible to both the shipper and provider accounts; active listings with remaining capacity and emissions factors are readable by any signed-in user; providers cannot edit capacity figures directly; anonymous visitors get no table access. A hosted Supabase development project is the required integration-test environment; local Docker is not required.
 - Task 2 applies migrations to that linked development project using the Supabase CLI through `npx`, then runs a committed database-verification script and integration tests. These checks, rather than SQL review alone, verify migration application, row-level security, and reservation semantics.
 - Environment variables contain Supabase and SolvaPay server credentials only; commit an `.env.example` with variable names and no secrets. Service-role and SolvaPay keys must never use a `NEXT_PUBLIC_` prefix.
 - Vercel hosts the app and API. Seed scripts create deterministic demo accounts, trips, shipments, factors, and tracking events.

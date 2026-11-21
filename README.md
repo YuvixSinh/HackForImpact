@@ -31,16 +31,23 @@ Use [`docs/claude-build-prompts.md`](docs/claude-build-prompts.md) to give Claud
 | `docs/templates/` | Copyable starting documents for new projects |
 | `src/app/` | Next.js routes and root layout (`/`, `/shipper`, `/provider`) |
 | `src/components/` | Shared UI components (header, theme toggle, placeholders) |
-| `src/lib/` | Framework-independent logic (currently theme persistence) |
-| `tests/unit/` | Focused tests for individual units |
-| `tests/integration/` | Tests across module/service boundaries |
+| `src/lib/domain/` | Typed domain models (accounts, shipments, capacity, policy, matches, approvals, bookings, tracking, emissions, audit) |
+| `src/lib/db/` | Repository interfaces, in-memory implementation (`memory/`), and server-only Supabase adapters (`supabase/`) |
+| `src/lib/theme/` | Theme persistence and the no-flash init script |
+| `supabase/` | Supabase CLI config and SQL migrations (schema, RLS, reservation RPCs) |
+| `tests/unit/` | Fast tests, including the in-memory repositories (`npm test`) |
+| `tests/contracts/` | Shared behaviour suites run against both in-memory and Supabase implementations |
+| `tests/integration/` | Hosted Supabase tests (`npm run test:integration`) |
+| `tests/db/` | Hosted schema verification (`npm run db:verify`) |
 
 ## Project setup
 
 AutoShip is a Next.js 16.4.6 app (App Router, TypeScript, Tailwind CSS v4) using npm. Unit tests use Vitest with jsdom and Testing Library.
 
 - **Runtime / package manager:** Node.js and npm. The app supports Node `>=20.9.0` (`engines`). The dev tooling (Vitest 5, jsdom 31) needs Node `^22.12.0`, `^24`, or `>=26`. Verified on Node 26.13.1 and npm 11.20.0.
-- **Environment:** No variables are needed for the app shell. Copy `.env.example` to `.env.local` when later tasks add them; never commit `.env*` files other than the example.
+- **Environment:** The app runs with no variables, using in-memory repositories. The hosted checks need the Supabase variables listed in `.env.example`, set in `.env.local`. Never commit `.env*` files other than the example.
+
+**Windows PowerShell:** if `npm` fails with "running scripts is disabled on this system", PowerShell's execution policy is blocking the `npm.ps1` wrapper. Use `npm.cmd` and `npx.cmd` instead (for example `npm.cmd test`, `npx.cmd supabase link`), run the commands from Command Prompt or Git Bash, or allow local scripts for your user with `Set-ExecutionPolicy -Scope CurrentUser RemoteSigned`.
 
 All commands below were run successfully from the repository root:
 
@@ -48,13 +55,28 @@ All commands below were run successfully from the repository root:
 | --- | --- | --- |
 | Install | `npm install` | Use `npm ci` for a clean install from `package-lock.json`. |
 | Run locally (development) | `npm run dev` | Serves http://localhost:3000. |
-| Test | `npm test` | Runs Vitest once (`tests/**/*.test.ts(x)`); `npm run test:watch` for watch mode. |
+| Test | `npm test` | Unit tests only (`tests/unit`), no network; `npm run test:watch` for watch mode. |
 | Lint | `npm run lint` | ESLint with `eslint-config-next` (core web vitals + TypeScript). |
 | Type check | `npm run typecheck` | `tsc --noEmit`. |
 | Build | `npm run build` | Production build into `.next/`. |
 | Run production build | `npm start` | Run after `npm run build`; serves http://localhost:3000. |
 
 Before marking work complete, run `npm run lint`, `npm run typecheck`, `npm test`, and `npm run build`.
+
+### Hosted Supabase checks
+
+These run against a linked hosted Supabase development project (no Docker needed) and fail if the variables in `.env.local` are missing. They have not yet been run against a project.
+
+1. Create a Supabase development project, then copy its URL, anon key, and service-role key into `.env.local`.
+2. Sign in and link (prompts for an access token and the database password):
+   `npx supabase login`, then `npx supabase link --project-ref <project-ref>`
+3. Run the checks:
+
+| Purpose | Command | Notes |
+| --- | --- | --- |
+| Apply migrations | `npx supabase db push --linked` | Applies `supabase/migrations/*.sql`. |
+| Verify schema | `npm run db:verify` | RLS on every table, policies present, reservation RPCs limited to the service role. |
+| Integration tests | `npm run test:integration` | Reservation contract against the RPCs and account isolation as real users. Creates throwaway `@example.com` users and deletes them afterwards. |
 
 ## Starting a project from this framework
 

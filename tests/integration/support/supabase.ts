@@ -20,9 +20,11 @@ export function anonClient(): SupabaseClient {
   return createClient(env.url, env.anonKey, noSession);
 }
 
-function must<T>(result: { data: T | null; error: { message: string } | null }, what: string): T {
-  if (result.error || result.data === null) throw new Error(`${what}: ${result.error?.message ?? "no data"}`);
-  return result.data;
+function must<T>(result: { data: T; error: { message: string } | null }, what: string): NonNullable<T> {
+  if (result.error || result.data === null || result.data === undefined) {
+    throw new Error(`${what}: ${result.error?.message ?? "no data"}`);
+  }
+  return result.data as NonNullable<T>;
 }
 
 /** Account created directly with the service role (no user), for RPC contract tests. */
@@ -47,11 +49,10 @@ export type TestUser = { userId: string; accountId: string; client: SupabaseClie
 export async function createSignedInAccount(kind: AccountKind): Promise<TestUser> {
   const email = `autoship-test-${crypto.randomUUID()}@example.com`;
   const password = `${crypto.randomUUID()}Aa1!`;
-  const created = must(
-    await serviceClient().auth.admin.createUser({ email, password, email_confirm: true }),
-    "create test user",
-  );
-  createdUsers.push(created.user.id);
+  const created = await serviceClient().auth.admin.createUser({ email, password, email_confirm: true });
+  if (created.error || !created.data.user) throw new Error(`create test user: ${created.error?.message}`);
+  const userId = created.data.user.id;
+  createdUsers.push(userId);
 
   const client = anonClient();
   const signIn = await client.auth.signInWithPassword({ email, password });
@@ -66,7 +67,7 @@ export async function createSignedInAccount(kind: AccountKind): Promise<TestUser
     "create_account",
   ) as string;
   createdAccounts.push(accountId);
-  return { userId: created.user.id, accountId, client };
+  return { userId, accountId, client };
 }
 
 /** Removes everything this run created; account deletes cascade to their records. */
