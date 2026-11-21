@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { approveAction, bookOptionAction, declineAction } from "@/app/actions/approvals";
+import { AgentWorkflow } from "@/components/shipments/agent-workflow";
 import { ApprovalCard } from "@/components/shipments/approval-card";
 import { BookingCard } from "@/components/shipments/booking-card";
 import { formatDateTime, formatPence } from "@/components/shipments/format";
@@ -10,6 +11,7 @@ import { RecommendationPanel } from "@/components/shipments/recommendation-panel
 import { RouteMap } from "@/components/tracking/route-map";
 import { RouteProgress } from "@/components/tracking/route-progress";
 import { TrackingTimeline } from "@/components/tracking/timeline";
+import { buildAgentWorkflow } from "@/lib/autopilot/workflow";
 import { routeCoordinates } from "@/lib/tracking/places";
 import { simulatePosition } from "@/lib/tracking/simulate";
 import { getServices } from "@/lib/server/services";
@@ -38,6 +40,27 @@ export default async function ShipmentPage({ params }: { params: Promise<{ id: s
   const disrupted = trackingEvents.some((e) => e.status === "delayed");
   const coords = routeCoordinates(shipment.pickupLocation, shipment.destinationLocation);
   const canBookManually = !booking && !approval && options.length > 0;
+  const chosenOptionId = activeBooking
+    ? (options.find((o) => o.listingId === activeBooking.capacityListingId)?.id ?? null)
+    : (approval?.recommendedOptionId ?? options[0]?.id ?? null);
+  const outcome = activeBooking
+    ? "booked"
+    : approval
+      ? approval.reasons.includes("no_exact_match")
+        ? "no_match"
+        : "awaiting_approval"
+      : shipment.status === "no_match"
+        ? "no_match"
+        : "not_run";
+  const workflow = buildAgentWorkflow({
+    options,
+    chosenOptionId,
+    outcome,
+    reasons: approval?.reasons ?? [],
+    maxAutoPricePence: view.maxAutoPricePence,
+    optimisation: shipment.optimisation,
+    payment: booking ? { pricePence: booking.pricePence, receiptReference: booking.receiptReference } : null,
+  });
 
   return (
     <div className="mx-auto w-full max-w-3xl space-y-6 px-4 py-8 sm:px-6">
@@ -68,6 +91,8 @@ export default async function ShipmentPage({ params }: { params: Promise<{ id: s
           </div>
         </dl>
       </div>
+
+      {workflow.length > 0 && <AgentWorkflow steps={workflow} options={options} chosenOptionId={chosenOptionId} />}
 
       {booking && <BookingCard booking={booking} />}
 

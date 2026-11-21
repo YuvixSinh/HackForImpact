@@ -101,6 +101,15 @@ Setup (in the SolvaPay Console, sandbox):
 
 Limits of this sandbox mapping: every shipper account pays from the one configured customer; one booking can debit at most 100,000 units (£1,000 at 1p per unit); SolvaPay credits are USD-pegged, so a GBP booking price is charged as that many units at the plan's price; and a debit is not reversed if confirming the booking fails afterwards.
 
+### Run with one click (Windows)
+
+Double-click `START.bat` to run the app at http://localhost:3100. It uses port 3100 because port 3000 is often taken by other tools. It installs packages on the first run and opens the sign-in page once the app answers. `STOP.bat` stops every AutoShip server started from this folder. Keep the minimised "AutoShip server" window open: closing it stops the app.
+
+### Shipment page: Autopilot at work and tracking map
+
+- **Autopilot at work** (`src/components/shipments/agent-workflow.tsx`, steps from the pure `src/lib/autopilot/workflow.ts`): after Ship it, the shipment page replays the run. The ranked options appear first, then search → rank → approval-rule check → book and pay reveal one at a time, and the chosen option is highlighted. **Replay** runs it again; with reduced motion the finished state shows at once.
+- **Tracking map** (`src/components/tracking/route-map.tsx`): an interactive OpenStreetMap map with no extra library. Drag to pan, and use + / − / ⌖ to zoom and recentre. It shows the route and the simulated vehicle position. It knows a fixed list of demo cities (`src/lib/tracking/places.ts`); other place names fall back to the simple route line. The tiles need internet access.
+
 ## Starting a project from this framework
 
 Copy the directory, then replace all bracketed prompts in the active docs. Make `docs/spec.md` and `docs/tasks.md` specific to the new project, document the actual stack and commands, and remove folders or guidance that do not apply. Keep the root agent files as pointers to the shared workflow.
