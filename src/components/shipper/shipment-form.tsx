@@ -58,12 +58,12 @@ export function ShipmentForm() {
         <Field name="readyAt" label="Ready from (UTC)" type="datetime-local" defaultValue={v.readyAt} error={errors.readyAt} />
         <Field name="deadlineAt" label="Deliver by (UTC)" type="datetime-local" defaultValue={v.deadlineAt} error={errors.deadlineAt} />
       </div>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Field name="length" label="Length cm" type="number" min="0" step="any" defaultValue={v.length} error={errors.length} />
         <Field name="width" label="Width cm" type="number" min="0" step="any" defaultValue={v.width} error={errors.width} />
         <Field name="height" label="Height cm" type="number" min="0" step="any" defaultValue={v.height} error={errors.height} />
       </div>
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
         <Field name="weightKg" label="Weight kg" type="number" min="0" step="any" defaultValue={v.weightKg} error={errors.weightKg} />
         <Field name="declaredValue" label="Value £" type="number" min="0" step="any" defaultValue={v.declaredValue} error={errors.declaredValue} />
         <Field name="budget" label="Budget £" type="number" min="0" step="any" defaultValue={v.budget} error={errors.budget} />
