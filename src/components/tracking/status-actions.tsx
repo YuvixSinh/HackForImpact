@@ -17,7 +17,7 @@ const BUTTONS: { status: TrackingStatus; label: string }[] = [
 export function StatusActions({ bookingId, allowed }: { bookingId: string; allowed?: readonly TrackingStatus[] }) {
   const [state, action, pending] = useActionState(postTrackingStatusAction, undefined);
   const can = (s: TrackingStatus) => !pending && (!allowed || allowed.includes(s));
-  const button = "rounded-md px-3 py-1.5 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50";
+  const button = "min-h-10 rounded-md px-3 py-2 text-sm font-medium disabled:cursor-not-allowed disabled:opacity-50";
 
   return (
     <form action={action} className="space-y-2" aria-label="Update tracking status">

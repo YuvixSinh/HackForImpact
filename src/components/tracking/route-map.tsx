@@ -76,6 +76,8 @@ export function RouteMap({
       const f = 2 ** (zoom - v.zoom);
       return { zoom, center: { x: v.center.x * f, y: v.center.y * f } };
     });
+  const panBy = (dx: number, dy: number) =>
+    setView((v) => (v ? { ...v, center: { x: v.center.x - dx, y: v.center.y - dy } } : v));
   const recenter = () =>
     setView(() => {
       const zoom = fitZoom(from, to, width, HEIGHT, PADDING);
@@ -101,8 +103,21 @@ export function RouteMap({
         ref={box}
         className="relative cursor-grab touch-none select-none bg-surface-muted active:cursor-grabbing"
         style={{ height: HEIGHT }}
-        role="application"
-        aria-label={`Map of the route from ${origin} to ${destination}: ${label}. Drag to pan.`}
+        role="region"
+        tabIndex={0}
+        aria-label={`Map of the route from ${origin} to ${destination}: ${label}. Use arrow keys to pan and plus or minus to zoom.`}
+        onKeyDown={(e) => {
+          if (e.target !== e.currentTarget) return;
+          const pan = 40;
+          if (e.key === "ArrowLeft") panBy(-pan, 0);
+          else if (e.key === "ArrowRight") panBy(pan, 0);
+          else if (e.key === "ArrowUp") panBy(0, -pan);
+          else if (e.key === "ArrowDown") panBy(0, pan);
+          else if (e.key === "+" || e.key === "=") zoomBy(1);
+          else if (e.key === "-" || e.key === "_") zoomBy(-1);
+          else return;
+          e.preventDefault();
+        }}
         onPointerDown={(e) => {
           drag.current = { x: e.clientX, y: e.clientY };
           e.currentTarget.setPointerCapture(e.pointerId);
@@ -204,7 +219,7 @@ export function RouteMap({
           <button
             type="button"
             aria-label="Zoom in"
-            className="h-8 w-8 text-lg hover:bg-surface-muted"
+            className="h-10 w-10 text-lg hover:bg-surface-muted"
             onClick={() => zoomBy(1)}
             onPointerDown={(e) => e.stopPropagation()}
           >
@@ -213,7 +228,7 @@ export function RouteMap({
           <button
             type="button"
             aria-label="Zoom out"
-            className="h-8 w-8 border-t border-line text-lg hover:bg-surface-muted"
+            className="h-10 w-10 border-t border-line text-lg hover:bg-surface-muted"
             onClick={() => zoomBy(-1)}
             onPointerDown={(e) => e.stopPropagation()}
           >
@@ -222,7 +237,7 @@ export function RouteMap({
           <button
             type="button"
             aria-label="Recentre on the route"
-            className="h-8 w-8 border-t border-line text-sm hover:bg-surface-muted"
+            className="h-10 w-10 border-t border-line text-sm hover:bg-surface-muted"
             onClick={recenter}
             onPointerDown={(e) => e.stopPropagation()}
           >
