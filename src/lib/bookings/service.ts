@@ -2,6 +2,7 @@ import type { BookingService } from "@/lib/autopilot/run";
 import type { Repositories } from "@/lib/db/repositories";
 import type { AccessContext } from "@/lib/db/types";
 import type { Id } from "@/lib/domain/common";
+import { checkEligibility, RELAXABLE_FAILURES } from "@/lib/matching/eligibility";
 import { estimateOption } from "@/lib/matching/estimate";
 import type { PaymentAdapter } from "@/lib/payments/types";
 
@@ -84,7 +85,16 @@ export async function bookSelectedOption(
   const listing = await repos.capacity.getById(ctx, option.capacityListingId);
   if (!listing || listing.status !== "active") return { ok: false, reason: "listing_unavailable" };
 
+  const failures = checkEligibility(shipment, listing);
+  const disallowed = option.isExactMatch
+    ? failures
+    : failures.filter((failure) => !RELAXABLE_FAILURES.includes(failure));
+  if (disallowed.length) return { ok: false, reason: `listing_ineligible:${disallowed.join(",")}` };
+
   const estimate = estimateOption(shipment, listing, await repos.emissions.listFactors());
+  if (estimate.totalPricePence !== option.totalPricePence || estimate.arrivalAt !== option.arrivalAt) {
+    return { ok: false, reason: "option_changed" };
+  }
   const candidate = {
     ...option,
     totalPricePence: estimate.totalPricePence,

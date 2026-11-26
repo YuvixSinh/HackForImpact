@@ -123,4 +123,36 @@ describe("booking service", () => {
     expect(result).toEqual({ ok: false, reason: "listing_unavailable" });
     expect(await repos.bookings.listForAccount(shipper)).toHaveLength(0);
   });
+
+  it("refuses a previously matched option after its listing no longer meets the shipment", async () => {
+    const deferred = { book: async () => ({ ok: false as const, reason: "deferred" }) };
+    const shipment = await repos.shipments.create(shipper, shipmentInput(NOW, { urgency: "critical" }));
+    await runAutopilot({ repos, booking: deferred }, shipper, shipment.id);
+    const [option] = await repos.matches.listForShipment(shipper, shipment.id);
+    await repos.capacity.update(provider, listingId, { origin: "Bristol" });
+
+    const result = await bookSelectedOption(deps(), shipper, { shipmentId: shipment.id, optionId: option.id });
+
+    expect(result).toEqual({ ok: false, reason: "listing_ineligible:wrong_route" });
+    expect(await repos.bookings.listForAccount(shipper)).toHaveLength(0);
+    expect(await remaining()).toBe(1000);
+  });
+
+  it("refuses a stored quote when the provider changes the price before approval", async () => {
+    const outcome = await autopilotShipment({ urgency: "critical" });
+    if (outcome.status !== "awaiting_approval") throw new Error("expected approval");
+    await repos.capacity.update(provider, listingId, { basePricePence: 30_000 });
+    const approval = (await repos.approvals.getById(shipper, outcome.approvalId))!;
+
+    const result = await decideApproval(deps(), shipper, {
+      approvalId: approval.id,
+      decision: "approved",
+      selectedOptionId: approval.recommendedOptionId!,
+    });
+
+    expect(result).toEqual({ ok: false, reason: "option_changed" });
+    expect((await repos.approvals.getById(shipper, approval.id))?.status).toBe("pending");
+    expect(await repos.bookings.listForAccount(shipper)).toHaveLength(0);
+    expect(await remaining()).toBe(1000);
+  });
 });
